@@ -146,7 +146,7 @@ export default function HeroSection() {
     color: titleColor,
     fontFamily: titleFontFamily,
     fontWeight: titleFontWeight,
-    fontSize: `clamp(${Math.round(titleFontSize * 0.65)}px, ${titleFontSize * 0.04}vw + 1rem, ${titleFontSize}px)`,
+    fontSize: `clamp(${Math.round(titleFontSize * 0.75)}px, ${titleFontSize * 0.06}vw + 1.25rem, ${Math.round(titleFontSize * 1.25)}px)`,
     letterSpacing: `${titleLetterSpacing}px`,
     textTransform: titleTextTransform,
     lineHeight: titleLineHeight,
@@ -211,9 +211,9 @@ export default function HeroSection() {
         </Link>
       )}
 
-      {/* Content */}
+      {/* Content — sized to fill ~half the hero */}
       <div
-        className={`hero-section-inner relative z-10 w-full max-w-2xl md:max-w-5xl lg:max-w-6xl mx-auto flex flex-col ${alignClass} px-6 items-center justify-center`}
+        className={`hero-section-inner relative z-10 w-full max-w-4xl lg:max-w-5xl mx-auto flex flex-col ${alignClass} px-6 items-center justify-center min-h-[50vh] gap-4 sm:gap-6`}
         style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
       >
         {/* Logo */}
@@ -221,7 +221,7 @@ export default function HeroSection() {
           <img
             src={logoSrc}
             alt="Logo"
-            className="mx-auto mb-4 sm:mb-6 max-w-[280px] sm:max-w-[320px] md:max-w-[400px] w-full h-auto brightness-0 invert"
+            className="mx-auto mb-2 sm:mb-4 w-[min(85vw,50%)] max-w-[560px] min-w-[220px] h-auto brightness-0 invert"
           />
         )}
 
@@ -238,8 +238,8 @@ export default function HeroSection() {
         {/* Subtitle */}
         {subtitle && (
           <p
-            className="mb-4 font-roboto text-xs md:text-sm font-semibold uppercase tracking-[0.35em] md:tracking-[0.4em] whitespace-nowrap"
-            style={{ color: '#ffffff' }}
+            className="mb-4 font-roboto text-sm md:text-base lg:text-lg font-semibold uppercase tracking-[0.35em] md:tracking-[0.4em] whitespace-nowrap"
+            style={subtitleStyle}
           >
             {subtitle}
           </p>
@@ -247,7 +247,7 @@ export default function HeroSection() {
 
         {/* Body text */}
         {bodyText && (
-          <p className="mb-6 max-w-lg" style={bodyStyle}>
+          <p className="mb-6 max-w-2xl text-base md:text-lg" style={bodyStyle}>
             {bodyText}
           </p>
         )}
@@ -256,10 +256,10 @@ export default function HeroSection() {
         {showSocials && (
           <SocialIcons
             variant="plain"
-            className="justify-center mb-8 sm:mb-12"
-            iconClassName="text-white"
-            gap="gap-4 sm:gap-6"
-            size="md"
+            className="justify-center mb-6 sm:mb-8"
+            iconClassName="text-white text-2xl sm:text-3xl"
+            gap="gap-5 sm:gap-8"
+            size="lg"
           />
         )}
 
@@ -271,13 +271,13 @@ export default function HeroSection() {
         )}
 
         {/* CTA Buttons */}
-        <div className="flex flex-col items-center gap-3 w-full max-w-sm">
+        <div className="flex flex-col items-center gap-4 w-full max-w-[min(90vw,50%)] sm:max-w-xl md:max-w-2xl">
           {(btn1Visible || btn2Visible) && (
-            <div className="flex flex-row w-full gap-3">
+            <div className="flex flex-row w-full gap-4">
               {btn1Visible && (
                 <Link
                   to={btn1Link}
-                  className={`flex-1 transition-all duration-300 text-center whitespace-nowrap cursor-pointer ${getBtnClasses(btn1Style)} ${btnPaddingClass} ${btnRadiusClass}`}
+                  className={`flex-1 transition-all duration-300 text-center whitespace-nowrap cursor-pointer text-sm sm:text-base md:text-lg ${getBtnClasses(btn1Style)} ${btnPaddingClass} ${btnRadiusClass} !py-2.5 sm:!py-3`}
                   style={btnStyle}
                 >
                   {btn1Label}
@@ -286,7 +286,7 @@ export default function HeroSection() {
               {btn2Visible && (
                 <Link
                   to={btn2Link}
-                  className={`flex-1 transition-all duration-300 text-center whitespace-nowrap cursor-pointer ${getBtnClasses(btn2Style)} ${btnPaddingClass} ${btnRadiusClass}`}
+                  className={`flex-1 transition-all duration-300 text-center whitespace-nowrap cursor-pointer text-sm sm:text-base md:text-lg ${getBtnClasses(btn2Style)} ${btnPaddingClass} ${btnRadiusClass} !py-2.5 sm:!py-3`}
                   style={btnStyle}
                 >
                   {btn2Label}
@@ -297,7 +297,7 @@ export default function HeroSection() {
           {btn3Visible && (
             <Link
               to={btn3Link}
-              className={`w-full text-center transition-all duration-300 whitespace-nowrap cursor-pointer ${getBtnClasses(btn3Style)} ${btnPaddingClass} ${btnRadiusClass}`}
+              className={`w-full text-center transition-all duration-300 whitespace-nowrap cursor-pointer text-sm sm:text-base md:text-lg ${getBtnClasses(btn3Style)} ${btnPaddingClass} ${btnRadiusClass} !py-2.5 sm:!py-3`}
               style={btnStyle}
             >
               {btn3Label}
