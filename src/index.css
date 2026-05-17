@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Roboto', sans-serif;
+    color: #7A7A7A;
+  }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+    color: #7A7A7A;
+    background-color: #FFFFFF;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Prata', serif;
+    color: #001731;
+  }
+
+  /* ─── Oceans Brand Color Tokens ─── */
+  :root {
+    --color-primary:    #001731;
+    --color-secondary:  #002349;
+    --color-accent:     #0D5959;
+    --color-golden:     #C9A84C;
+    --color-golden-dark:#A8832A;
+    --color-golden-light:#E8C97A;
+    --color-topbar:     #020101;
+    --color-text:       #7A7A7A;
+    --color-white:      #FFFFFF;
+    --color-off-white:  #F5F5F5;
+  }
+
+  /* ─── Gold Utility Classes ─── */
+  .text-golden          { color: #C9A84C !important; }
+  .bg-golden            { background-color: #C9A84C !important; }
+  .border-golden        { border-color: #C9A84C !important; }
+  .text-golden-dark     { color: #A8832A !important; }
+  .bg-golden-dark       { background-color: #A8832A !important; }
+
+  /* Golden hover — apply to any element for on-hover gold text */
+  .hover-golden:hover   { color: #C9A84C !important; }
+
+  /* ─── Brand Background Utilities ─── */
+  .bg-primary-brand   { background-color: #001731; }
+  .bg-secondary-brand { background-color: #002349; }
+  .bg-accent-brand    { background-color: #0D5959; }
+  .bg-topbar          { background-color: #020101; }
+
+  /* ─── Gold Shimmer Animation ─── */
+  @keyframes goldShimmer {
+    0%   { opacity: 0.85; }
+    50%  { opacity: 1;    }
+    100% { opacity: 0.85; }
+  }
+
+  .gold-pulse {
+    animation: goldShimmer 2.5s ease-in-out infinite;
+  }
+
+  /* ─── Golden hover glow for buttons / icons ─── */
+  @keyframes goldenGlow {
+    0%   { box-shadow: 0 0 0px #C9A84C44; }
+    50%  { box-shadow: 0 0 12px #C9A84C66; }
+    100% { box-shadow: 0 0 0px #C9A84C44; }
+  }
+
+  .golden-glow-hover:hover {
+    animation: goldenGlow 1.4s ease-in-out infinite;
+  }
+}
