@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePropertyLayout } from '@/hooks/usePropertyLayout';
 import Navbar from '@/components/feature/Navbar';
 import Footer from '@/components/feature/Footer';
@@ -95,6 +95,7 @@ export default function PropertyDetailPage() {
   const { get } = useSiteSettings();
   const { formatPrice } = useCurrency();
   const { settings: layout } = usePropertyLayout();
+  const navigate = useNavigate();
 
   /* ── state ────────────────────────────────────────────────── */
   const [listing, setListing]         = useState<FullListing | null>(null);
@@ -294,6 +295,17 @@ export default function PropertyDetailPage() {
 
           {/* ── Breathing space below search bar ── */}
           <div className="mt-2 md:mt-[15px]" />
+
+          {/* ── Back to search results ────────────────────────────── */}
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 text-sm font-roboto font-bold underline text-[#888] hover:text-[#012042] transition-colors mb-3 md:mb-4 cursor-pointer whitespace-nowrap"
+          >
+            <div className="w-4 h-4 flex items-center justify-center">
+              <i className="ri-arrow-left-line text-sm" />
+            </div>
+            Back to previous page
+          </button>
 
           {/* ── Unified container: Breadcrumb + Gallery ── */}
           <div

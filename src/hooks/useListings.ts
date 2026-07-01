@@ -11,6 +11,8 @@ export interface SupabaseListing {
   currency: string;
   price_note: string | null;
   location: string | null;
+  address: string | null;
+  city: string | null;
   neighborhood_id: string | null;
   neighborhood_name: string | null;
   bedrooms: number;
@@ -100,6 +102,8 @@ export function useListings(purpose?: string) {
             currency: item.currency as string,
             price_note: item.price_note as string | null,
             location: item.location as string | null,
+            address: item.address as string | null,
+            city: item.city as string | null,
             neighborhood_id: item.neighborhood_id as string | null,
             neighborhood_name: (item.neighborhoods as { name: string } | null)?.name ?? null,
             bedrooms: item.bedrooms as number,
@@ -181,6 +185,8 @@ export function useAllListings() {
             currency: item.currency as string,
             price_note: item.price_note as string | null,
             location: item.location as string | null,
+            address: item.address as string | null,
+            city: item.city as string | null,
             neighborhood_id: item.neighborhood_id as string | null,
             neighborhood_name: (item.neighborhoods as { name: string } | null)?.name ?? null,
             bedrooms: item.bedrooms as number,

@@ -367,8 +367,62 @@ export function SearchSEO() {
     keywords: 'search property Kampala, find homes Uganda, property search Kampala',
     canonical: '/search',
     ogType: 'website',
-    noIndex: true,
+    noIndex: false,
   });
+
+  useEffect(() => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'SearchResultsPage',
+      '@id': `${SITE_URL}/search#page`,
+      name: 'Property Search — Kampala, Uganda',
+      description: 'Search all properties for sale and rent in Kampala, Uganda.',
+      url: `${SITE_URL}/search`,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Search Properties', item: `${SITE_URL}/search` },
+        ],
+      },
+    };
+    return injectSchemaLD('schema-search', schema);
+  }, []);
+
+  return null;
+}
+
+/* ─────────────── Blog Index Page SEO ─────────────── */
+export function BlogIndexSEO() {
+  useSEO({
+    title: 'Kampala Area Guides & Property Blog | Oceans Uganda',
+    description: 'Read in-depth neighbourhood guides, market insights, and expert property advice from Oceans Uganda — Kampala&apos;s leading estate and letting agents.',
+    keywords: 'Kampala property blog, area guides Uganda, real estate insights Kampala',
+    canonical: '/blog',
+    ogType: 'website',
+  });
+
+  useEffect(() => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Blog',
+      '@id': `${SITE_URL}/blog#page`,
+      name: 'Kampala Area Guides & Property Blog',
+      description: 'In-depth neighbourhood guides, market insights, and expert property advice from Oceans Uganda.',
+      url: `${SITE_URL}/blog`,
+      publisher: { '@id': `${SITE_URL}/#organisation` },
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Blog & Area Guides', item: `${SITE_URL}/blog` },
+        ],
+      },
+    };
+    return injectSchemaLD('schema-blog-index', schema);
+  }, []);
 
   return null;
 }

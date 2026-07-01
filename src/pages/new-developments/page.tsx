@@ -26,10 +26,12 @@ const BEDS_OPTIONS = ['Any Beds', '1+', '2+', '3+', '4+', '5+'];
 const PROPERTY_TYPE_OPTIONS = ['All Types', 'Apartment', 'Villa', 'Penthouse', 'Townhouse', 'Family Home', 'Studio'];
 
 function mapListingToProperty(l: SupabaseListing): Property {
+  const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
+  const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
     id: l.id,
     title: l.title,
-    location: l.neighborhood_name || l.location || 'Kampala',
+    location: fullLocation,
     price: '',
     priceUsd: l.price,
     currency: l.currency || 'USD',
@@ -43,6 +45,7 @@ function mapListingToProperty(l: SupabaseListing): Property {
     image: l.cover_image || 'https://readdy.ai/api/search-image?query=modern%20new%20development%20property%20Kampala%20Uganda%20luxury%20residential%20building%20contemporary%20architecture%20premium%20real%20estate%20photography&width=600&height=400&seq=dev-placeholder&orientation=landscape',
     listingDate: l.listing_date || l.created_at?.split('T')[0] || '',
     slug: l.slug,
+    description: l.address || '',
   };
 }
 
@@ -109,7 +112,13 @@ export default function NewDevelopmentsPage() {
       }
       if (search.trim()) {
         const q = search.toLowerCase();
-        if (!p.title.toLowerCase().includes(q) && !p.location.toLowerCase().includes(q)) return false;
+        if (
+          !p.title.toLowerCase().includes(q) &&
+          !p.location.toLowerCase().includes(q) &&
+          !p.type.toLowerCase().includes(q) &&
+          !(p.description || '').toLowerCase().includes(q)
+        )
+          return false;
       }
       return true;
     });

@@ -42,10 +42,12 @@ const PER_PAGE_OPTIONS = [9, 18, 36];
 
 function mapListingToProperty(l: SupabaseListing): Property {
   const fallback = 'https://readdy.ai/api/search-image?query=premium%20rental%20apartment%20Kampala%20Uganda%20furnished%20interior%20modern%20living%20room%20tropical%20garden%20elegant%20expat%20home%20bright%20airy%20spaces&width=600&height=400&seq=rent-placeholder&orientation=landscape';
+  const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
+  const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
     id: l.id,
     title: l.title,
-    location: l.neighborhood_name || l.location || 'Kampala',
+    location: fullLocation,
     price: '',
     priceUsd: l.price,
     currency: l.currency || 'USD',
@@ -60,16 +62,7 @@ function mapListingToProperty(l: SupabaseListing): Property {
     images: l.gallery_images && l.gallery_images.length > 0 ? l.gallery_images : undefined,
     listingDate: l.listing_date || '',
     slug: l.slug,
-    description: '',
-  };
-}
-
-function filtersFromSearchBar(value: SearchBarValue): Partial<ListingFilters> {
-  return {
-    search: value.query,
-    type: value.type === 'Any Type' ? '' : value.type,
-    area: value.location === 'Any' ? '' : value.location,
-    beds: value.beds === 'Any' ? '' : value.beds.replace('+', ''),
+    description: l.address || '',
   };
 }
 
@@ -77,7 +70,7 @@ function searchBarFromFilters(filters: ListingFilters): SearchBarValue {
   return {
     query: filters.search,
     status: 'For Rent',
-    type: filters.type || 'Any Type',
+    type: filters.type || 'Any type',
     maxPrice: 'Max. Price',
     location: filters.area || 'Any',
     beds: filters.beds ? `${filters.beds}+` : 'Any',
@@ -220,7 +213,13 @@ export default function RentPage() {
       }
       if (filters.search.trim()) {
         const q = filters.search.toLowerCase();
-        if (!p.title.toLowerCase().includes(q) && !p.location.toLowerCase().includes(q)) return false;
+        if (
+          !p.title.toLowerCase().includes(q) &&
+          !p.location.toLowerCase().includes(q) &&
+          !p.type.toLowerCase().includes(q) &&
+          !(p.description || '').toLowerCase().includes(q)
+        )
+          return false;
       }
       return true;
     });
@@ -263,9 +262,23 @@ export default function RentPage() {
   // When search bar changes, map back to page filters immediately (real-time)
   const handleSearchBarChange = useCallback((value: SearchBarValue) => {
     setSearchBarValue(value);
-    const nextFilters = { ...filters, ...filtersFromSearchBar(value) };
-    setFilters(nextFilters);
-  }, [filters]);
+    setFilters((prev) => {
+      const updates: Partial<ListingFilters> = {};
+      // Always apply search query
+      updates.search = value.query;
+      // Only override type if it's a real selection (not default)
+      if (value.type !== 'Any type') updates.type = value.type;
+      // Only override area if it's a real selection
+      if (value.location !== 'Any') updates.area = value.location;
+      // Only override beds if it's a real selection
+      if (value.beds !== 'Any beds' && value.beds !== 'Any') updates.beds = value.beds.replace('+', '');
+      // Map price dropdown to priceBracket — only if non-default
+      if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
+        updates.priceBracket = value.priceRange;
+      }
+      return { ...prev, ...updates };
+    });
+  }, []);
 
   // When sidebar widgets change, sync back to search bar
   const updateFilters = useCallback((partial: Partial<ListingFilters>) => {

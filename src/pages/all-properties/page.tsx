@@ -18,10 +18,12 @@ const PAGE_SIZE = 12;
 function mapListingToProperty(l: SupabaseListing): Property {
   const fallback =
     'https://readdy.ai/api/search-image?query=premium%20property%20Kampala%20Uganda%20modern%20interior%20elegant%20architecture%20real%20estate%20photography&width=600&height=400&seq=allprop-fallback&orientation=landscape';
+  const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
+  const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
     id: l.id,
     title: l.title,
-    location: l.neighborhood_name || l.location || 'Kampala',
+    location: fullLocation,
     price: '',
     priceUsd: l.price,
     currency: l.currency || 'USD',
@@ -36,7 +38,7 @@ function mapListingToProperty(l: SupabaseListing): Property {
     images: l.gallery_images && l.gallery_images.length > 0 ? l.gallery_images : undefined,
     listingDate: l.listing_date || '',
     slug: l.slug,
-    description: '',
+    description: l.address || '',
     sqft: l.size_sqm ? Math.round(l.size_sqm * 10.764) : undefined,
   };
 }
@@ -82,7 +84,7 @@ function overlayFromSearchBar(value: SearchBarValue): Partial<OverlayFilters> {
   return {
     search: value.query,
     status: value.status === 'For Rent' ? 'For Rent' : value.status === 'For Sale' ? 'For Sale' : 'All',
-    type: value.type === 'Any Type' ? '' : value.type,
+    type: value.type === 'Any type' ? '' : value.type,
     neighbourhood: value.location === 'Any' ? 'All' : value.location,
     beds: value.beds === 'Any' ? '' : value.beds.replace('+', ''),
   };
@@ -92,7 +94,7 @@ function searchBarFromOverlay(overlay: OverlayFilters): SearchBarValue {
   return {
     query: overlay.search,
     status: overlay.status === 'For Rent' ? 'For Rent' : overlay.status === 'For Sale' ? 'For Sale' : 'For Sale',
-    type: overlay.type || 'Any Type',
+    type: overlay.type || 'Any type',
     maxPrice: 'Max. Price',
     location: overlay.neighbourhood === 'All' ? 'Any' : overlay.neighbourhood,
     beds: overlay.beds ? `${overlay.beds}+` : 'Any',
@@ -185,7 +187,8 @@ export default function AllPropertiesPage() {
         (p) =>
           p.title.toLowerCase().includes(q) ||
           p.location.toLowerCase().includes(q) ||
-          (p.type || '').toLowerCase().includes(q)
+          (p.type || '').toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q)
       );
     }
 
@@ -262,7 +265,15 @@ export default function AllPropertiesPage() {
   const handleSearchBarChange = (value: SearchBarValue) => {
     setSearchBarValue(value);
     const overlay = overlayFromSearchBar(value);
-    setOverlayFilters((prev) => ({ ...prev, ...overlay }));
+    setOverlayFilters((prev) => {
+      const next = { ...prev };
+      if (overlay.search !== undefined) next.search = overlay.search;
+      if (overlay.status && overlay.status !== 'All') next.status = overlay.status;
+      if (overlay.neighbourhood && overlay.neighbourhood !== 'All') next.neighbourhood = overlay.neighbourhood;
+      if (overlay.type) next.type = overlay.type;
+      if (overlay.beds) next.beds = overlay.beds;
+      return next;
+    });
     setSearchQuery(overlay.search || '');
     if (overlay.status && overlay.status !== 'All') setActiveStatus(overlay.status);
     if (overlay.neighbourhood && overlay.neighbourhood !== 'All') setActiveTab(overlay.neighbourhood);

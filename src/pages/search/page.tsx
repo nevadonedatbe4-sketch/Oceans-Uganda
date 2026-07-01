@@ -12,12 +12,15 @@ import SearchFiltersSidebar, { type SearchFilters } from './components/SearchFil
 import ActiveFilterTags from './components/ActiveFilterTags';
 import ListingsGrid from '@/pages/listings/components/ListingsGrid';
 import ListingsToolbar from '@/pages/listings/components/ListingsToolbar';
+import { SearchSEO } from '@/components/feature/PageSEO';
 
 function mapListingToProperty(l: SupabaseListing): Property {
+  const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
+  const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
     id: parseInt(l.id) || 0,
     title: l.title,
-    location: l.neighborhood_name || l.location || 'Kampala',
+    location: fullLocation,
     price: '',
     priceUsd: l.price,
     currency: l.currency || 'USD',
@@ -33,7 +36,7 @@ function mapListingToProperty(l: SupabaseListing): Property {
       'https://readdy.ai/api/search-image?query=luxury%20residential%20property%20Kampala%20Uganda%20modern%20architecture%20premium%20real%20estate%20photography%20elegant%20interior%20natural%20light&width=600&height=400&seq=search-fallback&orientation=landscape',
     listingDate: l.listing_date || l.created_at?.split('T')[0] || '',
     slug: l.slug,
-    description: l.description || '',
+    description: l.address || l.description || '',
   };
 }
 
@@ -79,22 +82,12 @@ function searchBarFromFilters(filters: SearchFilters, query: string): SearchBarV
   return {
     query,
     status: filters.purpose === 'rent' ? 'For Rent' : filters.purpose === 'sale' ? 'For Sale' : 'For Sale',
-    type: filters.type || 'Any Type',
+    type: filters.type || 'Any type',
     maxPrice: filters.maxPrice ? `$${filters.maxPrice}` : 'Max. Price',
     location: filters.area || 'Any',
     beds: filters.beds ? `${filters.beds}+` : 'Any',
     baths: 'Any',
     priceRange: 'Any',
-  };
-}
-
-function filtersFromSearchBar(value: SearchBarValue): Partial<SearchFilters> {
-  return {
-    purpose: value.status === 'For Rent' ? 'rent' : value.status === 'For Sale' ? 'sale' : 'all',
-    type: value.type === 'Any Type' ? '' : value.type,
-    area: value.location === 'Any' ? '' : value.location,
-    beds: value.beds === 'Any' ? '' : value.beds.replace('+', ''),
-    maxPrice: value.maxPrice === 'Max. Price' ? '' : value.maxPrice.replace(/[^0-9]/g, ''),
   };
 }
 
@@ -173,7 +166,8 @@ export default function SearchPage() {
         if (
           !p.title.toLowerCase().includes(q) &&
           !p.location.toLowerCase().includes(q) &&
-          !p.type.toLowerCase().includes(q)
+          !p.type.toLowerCase().includes(q) &&
+          !(p.description || '').toLowerCase().includes(q)
         )
           return false;
       }
@@ -208,13 +202,22 @@ export default function SearchPage() {
   // When search bar changes (controlled), update page state in real time
   const handleSearchBarChange = useCallback((value: SearchBarValue) => {
     setSearchBarValue(value);
-    const nextFilters = { ...filters, ...filtersFromSearchBar(value) };
-    setFilters(nextFilters);
+    setFilters((prev) => {
+      const updates: Partial<SearchFilters> = {};
+      if (value.status === 'For Rent') updates.purpose = 'rent';
+      else if (value.status === 'For Sale') updates.purpose = 'sale';
+      else updates.purpose = 'all';
+      if (value.type !== 'Any type') updates.type = value.type;
+      if (value.location !== 'Any') updates.area = value.location;
+      if (value.beds !== 'Any beds' && value.beds !== 'Any') updates.beds = value.beds.replace('+', '');
+      return { ...prev, ...updates };
+    });
     setQuery(value.query);
-  }, [filters]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white flex flex-col pt-[88px] md:pt-[96px]">
+      <SearchSEO />
       <Navbar />
 
       {/* ── Controlled search bar strip ── */}

@@ -40,10 +40,12 @@ const PER_PAGE_OPTIONS = [9, 18, 36];
 
 function mapListingToProperty(l: SupabaseListing): Property {
   const fallback = 'https://readdy.ai/api/search-image?query=luxury%20residential%20property%20Kampala%20Uganda%20modern%20interior%20elegant%20architecture%20premium%20real%20estate%20photography&width=600&height=400&seq=buy-placeholder&orientation=landscape';
+  const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
+  const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
     id: l.id,
     title: l.title,
-    location: l.neighborhood_name || l.location || 'Kampala',
+    location: fullLocation,
     price: '',
     priceUsd: l.price,
     currency: l.currency || 'USD',
@@ -58,16 +60,7 @@ function mapListingToProperty(l: SupabaseListing): Property {
     images: l.gallery_images && l.gallery_images.length > 0 ? l.gallery_images : undefined,
     listingDate: l.listing_date || '',
     slug: l.slug,
-    description: '',
-  };
-}
-
-function filtersFromSearchBar(value: SearchBarValue): Partial<ListingFilters> {
-  return {
-    search: value.query,
-    type: value.type === 'Any Type' ? '' : value.type,
-    area: value.location === 'Any' ? '' : value.location,
-    beds: value.beds === 'Any' ? '' : value.beds.replace('+', ''),
+    description: l.address || '',
   };
 }
 
@@ -75,7 +68,7 @@ function searchBarFromFilters(filters: ListingFilters): SearchBarValue {
   return {
     query: filters.search,
     status: 'For Sale',
-    type: filters.type || 'Any Type',
+    type: filters.type || 'Any type',
     maxPrice: 'Max. Price',
     location: filters.area || 'Any',
     beds: filters.beds ? `${filters.beds}+` : 'Any',
@@ -208,7 +201,13 @@ export default function BuyPage() {
       }
       if (filters.search.trim()) {
         const q = filters.search.toLowerCase();
-        if (!p.title.toLowerCase().includes(q) && !p.location.toLowerCase().includes(q)) return false;
+        if (
+          !p.title.toLowerCase().includes(q) &&
+          !p.location.toLowerCase().includes(q) &&
+          !p.type.toLowerCase().includes(q) &&
+          !(p.description || '').toLowerCase().includes(q)
+        )
+          return false;
       }
       return true;
     });
@@ -251,9 +250,23 @@ export default function BuyPage() {
   // When search bar changes, map back to page filters immediately (real-time)
   const handleSearchBarChange = useCallback((value: SearchBarValue) => {
     setSearchBarValue(value);
-    const nextFilters = { ...filters, ...filtersFromSearchBar(value) };
-    setFilters(nextFilters);
-  }, [filters]);
+    setFilters((prev) => {
+      const updates: Partial<ListingFilters> = {};
+      // Always apply search query
+      updates.search = value.query;
+      // Only override type if it's a real selection (not default)
+      if (value.type !== 'Any type') updates.type = value.type;
+      // Only override area if it's a real selection
+      if (value.location !== 'Any') updates.area = value.location;
+      // Only override beds if it's a real selection
+      if (value.beds !== 'Any beds' && value.beds !== 'Any') updates.beds = value.beds.replace('+', '');
+      // Map price dropdown to priceBracket — only if non-default
+      if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
+        updates.priceBracket = value.priceRange;
+      }
+      return { ...prev, ...updates };
+    });
+  }, []);
 
   // When sidebar widgets change, sync back to search bar
   const updateFilters = useCallback((partial: Partial<ListingFilters>) => {

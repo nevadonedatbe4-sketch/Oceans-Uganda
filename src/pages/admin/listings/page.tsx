@@ -151,8 +151,22 @@ export default function AdminListings() {
       const listing = listings.find((l) => l.id === id);
       if (listing) { setConfirmAction({ id, title: listing.title, type: 'disapprove' }); return; }
     }
-    await supabase.from('listings').update({ status: newStatus }).eq('id', id);
-    setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: newStatus } : l));
+
+    const updatePayload: Record<string, unknown> = { status: newStatus };
+    if (newStatus === 'published') {
+      updatePayload.published = true;
+      updatePayload.published_at = new Date().toISOString();
+    } else if (newStatus === 'draft' || newStatus === 'pending_review') {
+      updatePayload.published = false;
+    }
+
+    const { error } = await supabase.from('listings').update(updatePayload).eq('id', id);
+    if (error) {
+      showToast('error', `Failed to update status: ${error.message}`);
+      return;
+    }
+
+    setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: newStatus, published: newStatus === 'published' } : l));
     showToast('success', `Status updated to "${newStatus}"`);
   };
 
@@ -171,21 +185,37 @@ export default function AdminListings() {
         showToast('error', 'Failed to delete property');
       }
     } else if (type === 'archive') {
-      await supabase.from('listings').update({ status: 'archived' }).eq('id', id);
-      setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: 'archived' } : l));
-      showToast('success', 'Property archived');
+      const { error } = await supabase.from('listings').update({ status: 'archived', published: false }).eq('id', id);
+      if (!error) {
+        setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: 'archived', published: false } : l));
+        showToast('success', 'Property archived');
+      } else {
+        showToast('error', 'Failed to archive property');
+      }
     } else if (type === 'sold') {
-      await supabase.from('listings').update({ status: 'sold' }).eq('id', id);
-      setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: 'sold' } : l));
-      showToast('success', 'Property marked as sold');
+      const { error } = await supabase.from('listings').update({ status: 'sold', published: false }).eq('id', id);
+      if (!error) {
+        setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: 'sold', published: false } : l));
+        showToast('success', 'Property marked as sold');
+      } else {
+        showToast('error', 'Failed to mark as sold');
+      }
     } else if (type === 'expire') {
-      await supabase.from('listings').update({ status: 'expired' }).eq('id', id);
-      setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: 'expired' } : l));
-      showToast('success', 'Property marked as expired');
+      const { error } = await supabase.from('listings').update({ status: 'expired', published: false }).eq('id', id);
+      if (!error) {
+        setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: 'expired', published: false } : l));
+        showToast('success', 'Property marked as expired');
+      } else {
+        showToast('error', 'Failed to mark as expired');
+      }
     } else if (type === 'disapprove') {
-      await supabase.from('listings').update({ status: 'disapproved' }).eq('id', id);
-      setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: 'disapproved' } : l));
-      showToast('success', 'Property disapproved');
+      const { error } = await supabase.from('listings').update({ status: 'disapproved', published: false }).eq('id', id);
+      if (!error) {
+        setListings((prev) => prev.map((l) => l.id === id ? { ...l, status: 'disapproved', published: false } : l));
+        showToast('success', 'Property disapproved');
+      } else {
+        showToast('error', 'Failed to disapprove property');
+      }
     }
 
     setConfirmAction(null);
@@ -327,9 +357,16 @@ export default function AdminListings() {
   const handleBulkStatusChange = async (status: string) => {
     if (selectedIds.length === 0) return;
     setBulkProcessing(true);
-    const { error } = await supabase.from('listings').update({ status }).in('id', selectedIds);
+    const updatePayload: Record<string, unknown> = { status };
+    if (status === 'published') {
+      updatePayload.published = true;
+      updatePayload.published_at = new Date().toISOString();
+    } else if (status === 'draft' || status === 'pending_review') {
+      updatePayload.published = false;
+    }
+    const { error } = await supabase.from('listings').update(updatePayload).in('id', selectedIds);
     if (!error) {
-      setListings((prev) => prev.map((l) => selectedIds.includes(l.id) ? { ...l, status } : l));
+      setListings((prev) => prev.map((l) => selectedIds.includes(l.id) ? { ...l, status, published: status === 'published' } : l));
       showToast('success', `${selectedIds.length} listings updated to "${status}"`);
       setSelectedIds([]);
     } else {
