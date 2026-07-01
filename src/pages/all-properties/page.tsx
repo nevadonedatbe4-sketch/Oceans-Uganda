@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/feature/Navbar';
 import OceansPropertySearchBar, { type SearchBarValue } from '@/components/feature/OceansPropertySearchBar';
 import Footer from '@/components/feature/Footer';
@@ -107,6 +107,7 @@ export default function AllPropertiesPage() {
   const { listings: allListings, loading, error: listingsError } = useAllListings();
   const { neighborhoods } = useNeighborhoods();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Simple bar filters (top bar)
   const [activeTab, setActiveTab] = useState('All');
@@ -286,6 +287,21 @@ export default function AllPropertiesPage() {
     });
   };
 
+  // Handle the Search button — navigate to /search page with live Supabase data
+  const handleSearch = (value: SearchBarValue) => {
+    const params = new URLSearchParams();
+    if (value.query.trim()) params.set('q', value.query.trim());
+    if (value.status === 'For Rent') params.set('purpose', 'rent');
+    else if (value.status === 'For Sale') params.set('purpose', 'sale');
+    if (value.type !== 'Any type') params.set('type', value.type);
+    if (value.location !== 'Any') params.set('area', value.location);
+    if (value.beds !== 'Any beds' && value.beds !== 'Any') params.set('beds', value.beds.replace('+', ''));
+    if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
+      params.set('priceRange', value.priceRange);
+    }
+    navigate(`/search?${params.toString()}`);
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col pt-[88px] md:pt-[96px]">
       <AllPropertiesSEO count={sourceListings.length} />
@@ -297,6 +313,7 @@ export default function AllPropertiesPage() {
         controlled
         value={searchBarValue}
         onChange={handleSearchBarChange}
+        onSearch={handleSearch}
       />
 
       <AllPropertiesHeader

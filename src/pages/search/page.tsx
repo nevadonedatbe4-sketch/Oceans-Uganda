@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/feature/Navbar';
 import OceansPropertySearchBar, { type SearchBarValue } from '@/components/feature/OceansPropertySearchBar';
 import Footer from '@/components/feature/Footer';
@@ -93,6 +93,7 @@ function searchBarFromFilters(filters: SearchFilters, query: string): SearchBarV
 
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<SearchFilters>(() => filtersFromParams(searchParams));
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
@@ -215,6 +216,21 @@ export default function SearchPage() {
     setQuery(value.query);
   }, []);
 
+  // Handle the Search button — refresh the search page with live data
+  const handleSearch = useCallback((value: SearchBarValue) => {
+    const params = new URLSearchParams();
+    if (value.status === 'For Rent') params.set('purpose', 'rent');
+    else if (value.status === 'For Sale') params.set('purpose', 'sale');
+    if (value.query.trim()) params.set('q', value.query.trim());
+    if (value.type !== 'Any type') params.set('type', value.type);
+    if (value.location !== 'Any') params.set('area', value.location);
+    if (value.beds !== 'Any beds' && value.beds !== 'Any') params.set('beds', value.beds.replace('+', ''));
+    if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
+      params.set('priceRange', value.priceRange);
+    }
+    navigate(`/search?${params.toString()}`);
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-white flex flex-col pt-[88px] md:pt-[96px]">
       <SearchSEO />
@@ -226,6 +242,7 @@ export default function SearchPage() {
         controlled
         value={searchBarValue}
         onChange={handleSearchBarChange}
+        onSearch={handleSearch}
       />
 
       {/* Page title + breadcrumb */}

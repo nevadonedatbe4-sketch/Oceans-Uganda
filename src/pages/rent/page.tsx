@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/feature/Navbar';
 import Footer from '@/components/feature/Footer';
 import GlobalContactStrip from '@/components/feature/GlobalContactStrip';
@@ -125,6 +125,7 @@ export default function RentPage() {
   const { listings: supabaseListings, loading, error } = useListings('rent');
   const { neighborhoods } = useNeighborhoods();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Filters state — seeded from URL params
   const [filters, setFilters] = useState<ListingFilters>(() => {
@@ -280,6 +281,20 @@ export default function RentPage() {
     });
   }, []);
 
+  // Handle the Search button — navigate to /search page with live Supabase data
+  const handleSearch = useCallback((value: SearchBarValue) => {
+    const params = new URLSearchParams();
+    params.set('purpose', 'rent');
+    if (value.query.trim()) params.set('q', value.query.trim());
+    if (value.type !== 'Any type') params.set('type', value.type);
+    if (value.location !== 'Any') params.set('area', value.location);
+    if (value.beds !== 'Any beds' && value.beds !== 'Any') params.set('beds', value.beds.replace('+', ''));
+    if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
+      params.set('priceRange', value.priceRange);
+    }
+    navigate(`/search?${params.toString()}`);
+  }, [navigate]);
+
   // When sidebar widgets change, sync back to search bar
   const updateFilters = useCallback((partial: Partial<ListingFilters>) => {
     setFilters((prev) => {
@@ -300,6 +315,7 @@ export default function RentPage() {
         controlled
         value={searchBarValue}
         onChange={handleSearchBarChange}
+        onSearch={handleSearch}
       />
 
       {/* Page title + breadcrumb */}

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 /* ── Main search bar options (unchanged) ── */
 const RADIUS_OPTIONS = [
@@ -26,6 +27,7 @@ const PRICE_OPTIONS_RENT = [
   '$750 – $1,000 pcm',
   '$1,000 – $1,500 pcm',
   '$1,500 – $2,500 pcm',
+  '$2,500 – $5,000 pcm',
   '$2,500 – $5,000 pcm',
   '$5,000 – $7,500 pcm',
   '$7,500 – $10,000 pcm',
@@ -171,6 +173,7 @@ interface OceansPropertySearchBarProps {
   controlled?: boolean;
   value?: SearchBarValue;
   onChange?: (value: SearchBarValue) => void;
+  onSearch?: (value: SearchBarValue) => void;
 }
 
 interface Suggestion {
@@ -363,10 +366,12 @@ export default function OceansPropertySearchBar({
   controlled = false,
   value,
   onChange,
+  onSearch,
 }: OceansPropertySearchBarProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isRent = isRentPath(targetPath);
+  const { user } = useAuth();
 
   const isControlled = controlled && value !== undefined;
   const initialValue = isControlled ? value! : valueFromParams(searchParams);
@@ -413,6 +418,13 @@ export default function OceansPropertySearchBar({
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const queryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Save search modal */
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const barRef = useRef<HTMLDivElement>(null);
   const filtersPanelRef = useRef<HTMLDivElement>(null);
@@ -631,7 +643,7 @@ export default function OceansPropertySearchBar({
   /* ── Build the current value snapshot ── */
   function buildValue(overrides: Partial<SearchBarValue> = {}): SearchBarValue {
     return {
-      query,
+      query: overrides.query ?? query,
       status: overrides.status ?? status,
       type: overrides.type ?? type,
       maxPrice: overrides.maxPrice ?? (priceRange === 'Any price' ? 'Max. Price' : priceRange),
@@ -670,6 +682,13 @@ export default function OceansPropertySearchBar({
     const q = overrideQuery ?? query;
     const effectiveStatus = status;
     const purposeParam = effectiveStatus === 'For Rent' ? 'rent' : 'sale';
+    const currentValue = buildValue({ query: q, status: effectiveStatus });
+
+    if (isControlled && onSearch) {
+      onSearch(currentValue);
+      return;
+    }
+
     if (isControlled && onChange) {
       emitChange({ query: q, status: effectiveStatus });
       return;
@@ -723,8 +742,39 @@ export default function OceansPropertySearchBar({
   }
 
   function handleSaveSearch() {
-    if (onChange) {
-      emitChange();
+    if (!user) {
+      if (onChange) emitChange();
+      return;
+    }
+    const currentValue = buildValue();
+    setSaveName(currentValue.query || `Search — ${new Date().toLocaleDateString()}`);
+    setSaveError(null);
+    setSaveSuccess(false);
+    setSaveModalOpen(true);
+  }
+
+  async function handleSaveConfirm() {
+    if (!user || !saveName.trim()) return;
+    setSaveLoading(true);
+    setSaveError(null);
+    const criteria = buildValue();
+    const { error } = await supabase.from('saved_searches').insert({
+      user_id: user.id,
+      name: saveName.trim(),
+      criteria,
+      alert_enabled: false,
+      frequency: 'daily',
+    });
+    setSaveLoading(false);
+    if (error) {
+      setSaveError(error.message);
+    } else {
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveModalOpen(false);
+        setSaveSuccess(false);
+        setSaveName('');
+      }, 1500);
     }
   }
 
@@ -1669,6 +1719,77 @@ export default function OceansPropertySearchBar({
           </div>
         )}
       </div>
+
+      {/* ── Save Search Modal ── */}
+      {saveModalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/40" onClick={() => !saveLoading && setSaveModalOpen(false)}>
+          <div
+            className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {saveSuccess ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+                  <i className="ri-check-line text-2xl text-emerald-500" />
+                </div>
+                <h3 className="text-sm font-roboto font-bold text-[#374151] mb-1">Search saved!</h3>
+                <p className="text-xs font-roboto text-stone-400">You can find it in your saved searches.</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-roboto font-bold text-[#374151]">Save this search</h3>
+                  <button
+                    type="button"
+                    onClick={() => setSaveModalOpen(false)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 cursor-pointer transition-colors"
+                  >
+                    <i className="ri-close-line text-stone-400" />
+                  </button>
+                </div>
+
+                <label className="block text-[11px] font-roboto font-semibold uppercase tracking-widest text-stone-400 mb-1.5">
+                  Search name
+                </label>
+                <input
+                  type="text"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveConfirm(); }}
+                  placeholder="e.g. 3-bed rentals in Kololo"
+                  autoFocus
+                  className="w-full h-11 px-4 text-sm font-roboto font-medium text-[#374151] placeholder:text-stone-400 bg-white border border-[#d1d5db] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all mb-4"
+                />
+
+                {saveError && (
+                  <p className="text-xs font-roboto text-red-500 mb-3 flex items-center gap-1">
+                    <i className="ri-error-warning-line text-sm" />
+                    {saveError}
+                  </p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSaveModalOpen(false)}
+                    className="flex-1 py-2.5 border border-[#d1d5db] text-[#374151] text-sm font-roboto font-semibold rounded-lg hover:bg-stone-50 cursor-pointer transition-colors whitespace-nowrap"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveConfirm}
+                    disabled={saveLoading || !saveName.trim()}
+                    className="flex-1 py-2.5 bg-primary text-white text-sm font-roboto font-semibold rounded-lg hover:bg-primary/90 disabled:opacity-50 cursor-pointer transition-colors whitespace-nowrap"
+                  >
+                    {saveLoading ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
