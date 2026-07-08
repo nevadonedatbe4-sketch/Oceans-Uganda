@@ -28,6 +28,10 @@ const PRICE_OPTIONS_RENT = [
   '$1,000 – $1,500 pcm',
   '$1,500 – $2,500 pcm',
   '$2,500 – $5,000 pcm',
+<<<<<<< HEAD
+=======
+  '$2,500 – $5,000 pcm',
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
   '$5,000 – $7,500 pcm',
   '$7,500 – $10,000 pcm',
   '$10,000 – $20,000 pcm',
@@ -67,6 +71,7 @@ const STATUS_OPTIONS = ['For Sale', 'For Rent'] as const;
 
 /* ── Advanced filter options ── */
 const ADVANCED_PROPERTY_TYPES = [
+<<<<<<< HEAD
   'Apartment',
   'House',
   'Villa',
@@ -75,6 +80,14 @@ const ADVANCED_PROPERTY_TYPES = [
   'Studio',
   'Land',
   'Commercial',
+=======
+  'Detached',
+  'Semi-detached',
+  'Terraced',
+  'Flats',
+  'Bungalows',
+  'Farms/land',
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
 ] as const;
 
 const PROPERTY_FEATURES = [
@@ -1183,7 +1196,14 @@ export default function OceansPropertySearchBar({
           </button>
           <button
             type="button"
+<<<<<<< HEAD
             onClick={() => setFiltersOpen(false)}
+=======
+            onClick={() => {
+              setFiltersOpen(false);
+              handleSearch();
+            }}
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
             className="flex items-center gap-2 h-11 px-6 bg-primary text-white text-base font-roboto font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer whitespace-nowrap ml-auto"
           >
             Apply &amp; Search
@@ -1376,7 +1396,14 @@ export default function OceansPropertySearchBar({
           </button>
           <button
             type="button"
+<<<<<<< HEAD
             onClick={() => setFiltersOpen(false)}
+=======
+            onClick={() => {
+              setFiltersOpen(false);
+              handleSearch();
+            }}
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
             className="flex items-center gap-2 h-11 px-6 bg-primary text-white text-base font-roboto font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer whitespace-nowrap"
           >
             <span className="w-4 h-4 flex items-center justify-center">

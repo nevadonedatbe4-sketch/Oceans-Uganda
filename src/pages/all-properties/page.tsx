@@ -296,7 +296,10 @@ export default function AllPropertiesPage() {
       if (overlay.neighbourhood && overlay.neighbourhood !== 'All') next.neighbourhood = overlay.neighbourhood;
       if (overlay.type) next.type = overlay.type;
       if (overlay.beds) next.beds = overlay.beds;
+<<<<<<< HEAD
       if (overlay.priceBracket && overlay.priceBracket !== 'Any Price') next.priceBracket = overlay.priceBracket;
+=======
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
       return next;
     });
     setSearchQuery(overlay.search || '');

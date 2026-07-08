@@ -62,8 +62,11 @@ function mapListingToProperty(l: SupabaseListing): Property {
     listingDate: l.listing_date || '',
     slug: l.slug,
     description: l.address || '',
+<<<<<<< HEAD
     furnished: l.furnished,
     amenities: l.amenities,
+=======
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
   };
 }
 

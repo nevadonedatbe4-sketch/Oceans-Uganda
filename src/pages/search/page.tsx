@@ -13,7 +13,10 @@ import ActiveFilterTags from './components/ActiveFilterTags';
 import ListingsGrid from '@/pages/listings/components/ListingsGrid';
 import ListingsToolbar from '@/pages/listings/components/ListingsToolbar';
 import { SearchSEO } from '@/components/feature/PageSEO';
+<<<<<<< HEAD
 import { matchesAdvancedFilters, parsePriceRangeLabel } from '@/pages/listings/utils/advancedSearchFilters';
+=======
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
 
 function mapListingToProperty(l: SupabaseListing): Property {
   const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
@@ -38,8 +41,11 @@ function mapListingToProperty(l: SupabaseListing): Property {
     listingDate: l.listing_date || l.created_at?.split('T')[0] || '',
     slug: l.slug,
     description: l.address || l.description || '',
+<<<<<<< HEAD
     furnished: l.furnished,
     amenities: l.amenities,
+=======
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
   };
 }
 
@@ -215,11 +221,14 @@ export default function SearchPage() {
       if (value.type !== 'Any type') updates.type = value.type;
       if (value.location !== 'Any') updates.area = value.location;
       if (value.beds !== 'Any beds' && value.beds !== 'Any') updates.beds = value.beds.replace('+', '');
+<<<<<<< HEAD
       if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
         const { min, max } = parsePriceRangeLabel(value.priceRange);
         updates.minPrice = min != null ? String(min) : '';
         updates.maxPrice = max != null ? String(max) : '';
       }
+=======
+>>>>>>> fbc1a86e03a792515d039bccd793104450a47fe7
       return { ...prev, ...updates };
     });
     setQuery(value.query);
