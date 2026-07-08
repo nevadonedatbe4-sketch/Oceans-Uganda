@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/feature/Navbar';
 import OceansPropertySearchBar, { type SearchBarValue } from '@/components/feature/OceansPropertySearchBar';
 import Footer from '@/components/feature/Footer';
@@ -12,16 +12,19 @@ import InnerContactSection from '@/components/feature/InnerContactSection';
 import { useAllListings, useNeighborhoods, type SupabaseListing } from '@/hooks/useListings';
 import type { Property } from '@/types/property';
 import { AllPropertiesSEO } from '@/components/feature/PageSEO';
+import { matchesAdvancedFilters, parsePriceRangeLabel } from '@/pages/listings/utils/advancedSearchFilters';
 
 const PAGE_SIZE = 12;
 
 function mapListingToProperty(l: SupabaseListing): Property {
   const fallback =
     'https://readdy.ai/api/search-image?query=premium%20property%20Kampala%20Uganda%20modern%20interior%20elegant%20architecture%20real%20estate%20photography&width=600&height=400&seq=allprop-fallback&orientation=landscape';
+  const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
+  const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
     id: l.id,
     title: l.title,
-    location: l.neighborhood_name || l.location || 'Kampala',
+    location: fullLocation,
     price: '',
     priceUsd: l.price,
     currency: l.currency || 'USD',
@@ -36,8 +39,10 @@ function mapListingToProperty(l: SupabaseListing): Property {
     images: l.gallery_images && l.gallery_images.length > 0 ? l.gallery_images : undefined,
     listingDate: l.listing_date || '',
     slug: l.slug,
-    description: '',
+    description: l.address || '',
     sqft: l.size_sqm ? Math.round(l.size_sqm * 10.764) : undefined,
+    furnished: l.furnished,
+    amenities: l.amenities,
   };
 }
 
@@ -82,9 +87,13 @@ function overlayFromSearchBar(value: SearchBarValue): Partial<OverlayFilters> {
   return {
     search: value.query,
     status: value.status === 'For Rent' ? 'For Rent' : value.status === 'For Sale' ? 'For Sale' : 'All',
-    type: value.type === 'Any Type' ? '' : value.type,
+    type: value.type === 'Any type' ? '' : value.type,
     neighbourhood: value.location === 'Any' ? 'All' : value.location,
-    beds: value.beds === 'Any' ? '' : value.beds.replace('+', ''),
+    beds: value.beds === 'Any' || value.beds === 'Any beds' ? '' : value.beds.replace('+', ''),
+    priceBracket:
+      value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any'
+        ? value.priceRange
+        : 'Any Price',
   };
 }
 
@@ -92,12 +101,12 @@ function searchBarFromOverlay(overlay: OverlayFilters): SearchBarValue {
   return {
     query: overlay.search,
     status: overlay.status === 'For Rent' ? 'For Rent' : overlay.status === 'For Sale' ? 'For Sale' : 'For Sale',
-    type: overlay.type || 'Any Type',
+    type: overlay.type || 'Any type',
     maxPrice: 'Max. Price',
     location: overlay.neighbourhood === 'All' ? 'Any' : overlay.neighbourhood,
     beds: overlay.beds ? `${overlay.beds}+` : 'Any',
     baths: 'Any',
-    priceRange: 'Any',
+    priceRange: overlay.priceBracket && overlay.priceBracket !== 'Any Price' ? overlay.priceBracket : 'Any',
   };
 }
 
@@ -105,6 +114,7 @@ export default function AllPropertiesPage() {
   const { listings: allListings, loading, error: listingsError } = useAllListings();
   const { neighborhoods } = useNeighborhoods();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Simple bar filters (top bar)
   const [activeTab, setActiveTab] = useState('All');
@@ -128,6 +138,7 @@ export default function AllPropertiesPage() {
     const type = searchParams.get('type') || '';
     const area = searchParams.get('area') || '';
     const beds = searchParams.get('beds') || '';
+    const price = searchParams.get('price') || '';
 
     setSearchQuery(q);
     setActiveStatus(purpose === 'rent' ? 'For Rent' : purpose === 'sale' ? 'For Sale' : 'All');
@@ -139,7 +150,7 @@ export default function AllPropertiesPage() {
       neighbourhood: area || 'All',
       type,
       beds: beds ? beds.replace('+', '') : '',
-      priceBracket: 'Any Price',
+      priceBracket: price || 'Any Price',
     };
     setOverlayFilters(nextOverlay);
     setSearchBarValue(searchBarFromOverlay(nextOverlay));
@@ -185,7 +196,8 @@ export default function AllPropertiesPage() {
         (p) =>
           p.title.toLowerCase().includes(q) ||
           p.location.toLowerCase().includes(q) ||
-          (p.type || '').toLowerCase().includes(q)
+          (p.type || '').toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q)
       );
     }
 
@@ -202,8 +214,22 @@ export default function AllPropertiesPage() {
       list = list.filter((p) => (p.beds ?? 0) >= minBeds);
     }
 
+    // Overlay: price bracket
+    const bracket = parsePriceRangeLabel(overlayFilters.priceBracket);
+    if (bracket.min !== null || bracket.max !== null) {
+      list = list.filter((p) => {
+        if (p.priceUsd == null) return true;
+        if (bracket.min !== null && p.priceUsd < bracket.min) return false;
+        if (bracket.max !== null && p.priceUsd > bracket.max) return false;
+        return true;
+      });
+    }
+
+    // Advanced Filters panel (from the search bar)
+    list = list.filter((p) => matchesAdvancedFilters(p, searchBarValue));
+
     return list;
-  }, [sourceListings, activeTab, activeStatus, searchQuery, overlayFilters]);
+  }, [sourceListings, activeTab, activeStatus, searchQuery, overlayFilters, searchBarValue]);
 
   const overlayActiveCount = [
     overlayFilters.search.trim(),
@@ -246,6 +272,7 @@ export default function AllPropertiesPage() {
       area: f.neighbourhood === 'All' ? '' : f.neighbourhood,
       type: f.type,
       beds: f.beds,
+      price: f.priceBracket && f.priceBracket !== 'Any Price' ? f.priceBracket : '',
     });
   };
 
@@ -262,7 +289,16 @@ export default function AllPropertiesPage() {
   const handleSearchBarChange = (value: SearchBarValue) => {
     setSearchBarValue(value);
     const overlay = overlayFromSearchBar(value);
-    setOverlayFilters((prev) => ({ ...prev, ...overlay }));
+    setOverlayFilters((prev) => {
+      const next = { ...prev };
+      if (overlay.search !== undefined) next.search = overlay.search;
+      if (overlay.status && overlay.status !== 'All') next.status = overlay.status;
+      if (overlay.neighbourhood && overlay.neighbourhood !== 'All') next.neighbourhood = overlay.neighbourhood;
+      if (overlay.type) next.type = overlay.type;
+      if (overlay.beds) next.beds = overlay.beds;
+      if (overlay.priceBracket && overlay.priceBracket !== 'Any Price') next.priceBracket = overlay.priceBracket;
+      return next;
+    });
     setSearchQuery(overlay.search || '');
     if (overlay.status && overlay.status !== 'All') setActiveStatus(overlay.status);
     if (overlay.neighbourhood && overlay.neighbourhood !== 'All') setActiveTab(overlay.neighbourhood);
@@ -272,7 +308,23 @@ export default function AllPropertiesPage() {
       area: overlay.neighbourhood === 'All' ? '' : overlay.neighbourhood,
       type: overlay.type || '',
       beds: overlay.beds || '',
+      price: overlay.priceBracket && overlay.priceBracket !== 'Any Price' ? overlay.priceBracket : '',
     });
+  };
+
+  // Handle the Search button — navigate to /search page with live Supabase data
+  const handleSearch = (value: SearchBarValue) => {
+    const params = new URLSearchParams();
+    if (value.query.trim()) params.set('q', value.query.trim());
+    if (value.status === 'For Rent') params.set('purpose', 'rent');
+    else if (value.status === 'For Sale') params.set('purpose', 'sale');
+    if (value.type !== 'Any type') params.set('type', value.type);
+    if (value.location !== 'Any') params.set('area', value.location);
+    if (value.beds !== 'Any beds' && value.beds !== 'Any') params.set('beds', value.beds.replace('+', ''));
+    if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
+      params.set('priceRange', value.priceRange);
+    }
+    navigate(`/search?${params.toString()}`);
   };
 
   return (
@@ -286,6 +338,7 @@ export default function AllPropertiesPage() {
         controlled
         value={searchBarValue}
         onChange={handleSearchBarChange}
+        onSearch={handleSearch}
       />
 
       <AllPropertiesHeader

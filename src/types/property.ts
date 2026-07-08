@@ -17,6 +17,8 @@ export interface Property {
   image: string;
   images?: string[];
   featured?: boolean;
+  furnished?: boolean;
+  amenities?: string[];
   listingDate: string;
   slug?: string;
 }

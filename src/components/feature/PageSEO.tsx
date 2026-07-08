@@ -367,8 +367,62 @@ export function SearchSEO() {
     keywords: 'search property Kampala, find homes Uganda, property search Kampala',
     canonical: '/search',
     ogType: 'website',
-    noIndex: true,
+    noIndex: false,
   });
+
+  useEffect(() => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'SearchResultsPage',
+      '@id': `${SITE_URL}/search#page`,
+      name: 'Property Search — Kampala, Uganda',
+      description: 'Search all properties for sale and rent in Kampala, Uganda.',
+      url: `${SITE_URL}/search`,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Search Properties', item: `${SITE_URL}/search` },
+        ],
+      },
+    };
+    return injectSchemaLD('schema-search', schema);
+  }, []);
+
+  return null;
+}
+
+/* ─────────────── Blog Index Page SEO ─────────────── */
+export function BlogIndexSEO() {
+  useSEO({
+    title: 'Kampala Area Guides & Property Blog | Oceans Uganda',
+    description: 'Read in-depth neighbourhood guides, market insights, and expert property advice from Oceans Uganda — Kampala&apos;s leading estate and letting agents.',
+    keywords: 'Kampala property blog, area guides Uganda, real estate insights Kampala',
+    canonical: '/blog',
+    ogType: 'website',
+  });
+
+  useEffect(() => {
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'Blog',
+      '@id': `${SITE_URL}/blog#page`,
+      name: 'Kampala Area Guides & Property Blog',
+      description: 'In-depth neighbourhood guides, market insights, and expert property advice from Oceans Uganda.',
+      url: `${SITE_URL}/blog`,
+      publisher: { '@id': `${SITE_URL}/#organisation` },
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Blog & Area Guides', item: `${SITE_URL}/blog` },
+        ],
+      },
+    };
+    return injectSchemaLD('schema-blog-index', schema);
+  }, []);
 
   return null;
 }
@@ -701,6 +755,68 @@ export function AboutSEO() {
       },
     };
     return injectSchemaLD('schema-about', schema);
+  }, []);
+
+  return null;
+}
+
+/* ─────────────── Joint Ventures Page SEO ─────────────── */
+export function JointVentureSEO() {
+  useSEO({
+    title: 'Joint Venture Land Partnerships Uganda | Oceans Uganda',
+    description: 'Partner your land with an investor, or find prime land to invest in across Uganda. Post a landowner brief or submit an investor request with Oceans Uganda\'s JV desk.',
+    keywords: 'joint venture land Uganda, land investment Kampala, landowner investor partnership Uganda',
+    canonical: '/joint-venture',
+    ogType: 'website',
+  });
+
+  useEffect(() => {
+    const serviceSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      '@id': `${SITE_URL}/joint-venture#service`,
+      name: 'Joint Venture Land Partnerships',
+      provider: { '@id': `${SITE_URL}/#organisation` },
+      serviceType: 'Real Estate Joint Venture Brokerage',
+      areaServed: { '@type': 'Country', name: 'Uganda' },
+      description: 'Matching landowners with investors for joint venture land development, and sourcing land for outright purchase, across Uganda.',
+      url: `${SITE_URL}/joint-venture`,
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Joint Ventures', item: `${SITE_URL}/joint-venture` },
+        ],
+      },
+    };
+
+    const faqSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      '@id': `${SITE_URL}/joint-venture#faq`,
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'What exactly is a land joint venture?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'A landowner contributes the land and an investor contributes capital for development. Instead of a straight sale, both sides agree how the finished value or income will be split.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Does Oceans Uganda charge a fee for joint ventures?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Submitting a brief is free. A facilitation fee applies only once a joint venture or sale is concluded, agreed upfront with both parties.',
+          },
+        },
+      ],
+    };
+
+    const cleanup1 = injectSchemaLD('schema-joint-venture', serviceSchema);
+    const cleanup2 = injectSchemaLD('schema-joint-venture-faq', faqSchema);
+    return () => { cleanup1(); cleanup2(); };
   }, []);
 
   return null;

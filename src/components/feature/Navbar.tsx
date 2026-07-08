@@ -10,11 +10,12 @@ const navLinks = [
   { label: 'Landlords', href: '/landlords' },
   { label: 'Neighbourhoods', href: '/neighbourhoods' },
   { label: 'New Developments', href: '/new-developments' },
+  { label: 'Joint Ventures', href: '/joint-venture' },
   { label: 'About Us', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
 
-const FALLBACK_LOGO = 'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png?v=baab6056156e05218f44fc6ee7472eef';
+const FALLBACK_LOGO = 'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/ee86f326-2c48-4946-a85a-0b6bae37f11d_logo-21.png?v=6d142c0fdbabe750634bc9bfe54c6d82';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -25,7 +26,7 @@ export default function Navbar() {
   const phone = get('phone', '+256(0)758671270');
   const email = get('email', 'info@oceans.co.ug');
   const logoSrc = get('logo_main') || FALLBACK_LOGO;
-  const logoHeight = parseInt(get('logo_height_standard', '56'), 10);
+  const logoHeight = parseInt(get('logo_height_standard', '72'), 10);
 
   // Typography — nav settings
   const navFamily = get('typo_nav_family', 'Prata');
@@ -101,8 +102,7 @@ export default function Navbar() {
             <img
               src={logoSrc}
               alt={get('site_name', 'Oceans Uganda')}
-              style={{ height: `${logoHeight}px` }}
-              className="w-auto object-contain"
+              className="h-16 w-auto object-contain opacity-90"
             />
           </Link>
 

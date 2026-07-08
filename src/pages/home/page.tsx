@@ -25,10 +25,10 @@ function BackToTopButton() {
     <button
       onClick={scrollToTop}
       aria-label="Back to top"
-      className="fixed bottom-8 right-8 z-50 w-12 h-12 flex items-center justify-center text-white shadow-lg cursor-pointer whitespace-nowrap transition-all duration-300 hover:scale-110 hover:shadow-xl"
+      className="fixed bottom-8 right-8 z-50 w-9 h-9 flex items-center justify-center text-white shadow-lg cursor-pointer whitespace-nowrap rounded-full transition-all duration-300 hover:scale-110 hover:shadow-xl"
       style={{ backgroundColor: '#0D5959' }}
     >
-      <i className="ri-arrow-up-line text-xl" />
+      <i className="ri-arrow-up-line text-base" />
     </button>
   );
 }
@@ -39,9 +39,7 @@ export default function Home() {
       <HomeSEO />
       <Navbar />
       <main>
-        <div className="pb-8 md:pb-12">
-          <HeroSection />
-        </div>
+        <HeroSection />
         <NeighborhoodsSection />
         <PropertiesSection />
         <ContactSection />

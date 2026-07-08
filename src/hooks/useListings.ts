@@ -11,6 +11,8 @@ export interface SupabaseListing {
   currency: string;
   price_note: string | null;
   location: string | null;
+  address: string | null;
+  city: string | null;
   neighborhood_id: string | null;
   neighborhood_name: string | null;
   bedrooms: number;
@@ -21,7 +23,9 @@ export interface SupabaseListing {
   listing_date: string | null;
   status: string;
   featured: boolean;
+  furnished: boolean;
   gallery_images?: string[];
+  amenities?: string[];
 }
 
 export interface NeighborhoodOption {
@@ -58,12 +62,13 @@ export function useListings(purpose?: string) {
         .order('featured', { ascending: false })
         .order('listing_date', { ascending: false });
 
-      const [listingsRes, imagesRes] = await Promise.all([
+      const [listingsRes, imagesRes, amenitiesRes] = await Promise.all([
         purposeQuery,
         supabase
           .from('listing_images')
           .select('listing_id, url, sort_order')
           .order('sort_order', { ascending: true }),
+        supabase.from('listing_amenities').select('listing_id, amenity'),
       ]);
 
       if (cancelled) return;
@@ -79,6 +84,13 @@ export function useListings(purpose?: string) {
         (imagesRes.data || []).forEach((img: { listing_id: string; url: string }) => {
           if (!imageMap[img.listing_id]) imageMap[img.listing_id] = [];
           if (img.url) imageMap[img.listing_id].push(img.url);
+        });
+
+        // Build a map of listing_id → amenity labels
+        const amenityMap: Record<string, string[]> = {};
+        (amenitiesRes.data || []).forEach((a: { listing_id: string; amenity: string }) => {
+          if (!amenityMap[a.listing_id]) amenityMap[a.listing_id] = [];
+          if (a.amenity) amenityMap[a.listing_id].push(a.amenity);
         });
 
         const mapped = (listingsRes.data || []).map((item: Record<string, unknown>) => {
@@ -100,6 +112,8 @@ export function useListings(purpose?: string) {
             currency: item.currency as string,
             price_note: item.price_note as string | null,
             location: item.location as string | null,
+            address: item.address as string | null,
+            city: item.city as string | null,
             neighborhood_id: item.neighborhood_id as string | null,
             neighborhood_name: (item.neighborhoods as { name: string } | null)?.name ?? null,
             bedrooms: item.bedrooms as number,
@@ -110,7 +124,9 @@ export function useListings(purpose?: string) {
             listing_date: item.listing_date as string | null,
             status: item.status as string,
             featured: item.featured as boolean,
+            furnished: (item.furnished as boolean) ?? false,
             gallery_images: allImages,
+            amenities: amenityMap[id] || [],
           };
         });
         setListings(mapped);
@@ -137,7 +153,7 @@ export function useAllListings() {
       setLoading(true);
       setError(null);
 
-      const [listingsRes, imagesRes] = await Promise.all([
+      const [listingsRes, imagesRes, amenitiesRes] = await Promise.all([
         supabase
           .from('listings')
           .select('*, neighborhoods(name)')
@@ -147,6 +163,7 @@ export function useAllListings() {
           .from('listing_images')
           .select('listing_id, url, sort_order')
           .order('sort_order', { ascending: true }),
+        supabase.from('listing_amenities').select('listing_id, amenity'),
       ]);
 
       if (cancelled) return;
@@ -161,6 +178,12 @@ export function useAllListings() {
         (imagesRes.data || []).forEach((img: { listing_id: string; url: string }) => {
           if (!imageMap[img.listing_id]) imageMap[img.listing_id] = [];
           if (img.url) imageMap[img.listing_id].push(img.url);
+        });
+
+        const amenityMap: Record<string, string[]> = {};
+        (amenitiesRes.data || []).forEach((a: { listing_id: string; amenity: string }) => {
+          if (!amenityMap[a.listing_id]) amenityMap[a.listing_id] = [];
+          if (a.amenity) amenityMap[a.listing_id].push(a.amenity);
         });
 
         const mapped = (listingsRes.data || []).map((item: Record<string, unknown>) => {
@@ -181,6 +204,8 @@ export function useAllListings() {
             currency: item.currency as string,
             price_note: item.price_note as string | null,
             location: item.location as string | null,
+            address: item.address as string | null,
+            city: item.city as string | null,
             neighborhood_id: item.neighborhood_id as string | null,
             neighborhood_name: (item.neighborhoods as { name: string } | null)?.name ?? null,
             bedrooms: item.bedrooms as number,
@@ -191,7 +216,9 @@ export function useAllListings() {
             listing_date: item.listing_date as string | null,
             status: item.status as string,
             featured: item.featured as boolean,
+            furnished: (item.furnished as boolean) ?? false,
             gallery_images: allImages,
+            amenities: amenityMap[id] || [],
           };
         });
         setListings(mapped);

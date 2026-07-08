@@ -86,6 +86,7 @@ import AdminSavedSearches from '@/pages/admin/saved-searches/page';
 import AdminInquiries from '@/pages/admin/inquiries/page';
 import AdminProfilePage from '@/pages/admin/profile/page';
 import AboutPage from '@/pages/about/page';
+import JointVenturePage from '@/pages/joint-venture/page';
 
 const routes: RouteObject[] = [
   {
@@ -143,6 +144,10 @@ const routes: RouteObject[] = [
   {
     path: '/new-developments',
     element: <NewDevelopmentsPage />,
+  },
+  {
+    path: '/joint-venture',
+    element: <JointVenturePage />,
   },
   {
     path: '/about',

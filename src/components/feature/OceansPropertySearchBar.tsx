@@ -1,90 +1,143 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
-const STATUS_OPTIONS = ['For Sale', 'For Rent'];
-const TYPE_OPTIONS = ['Any Type', 'Apartment', 'House', 'Villa', 'Office', 'Land', 'Commercial', 'Penthouse', 'Townhouse', 'Studio'];
-const MAX_PRICE_OPTIONS = ['Max. Price', '$500', '$1,000', '$2,000', '$5,000', '$10,000', '$20,000', '$50,000', '$100,000', '$200,000', '$500,000', '$1,000,000+'];
-const LOCATION_OPTIONS = ['Any', 'Kololo', 'Nakasero', 'Muyenga', 'Bugolobi', 'Naguru', 'Munyonyo', 'Ntinda', 'Bukoto', 'Kisaasi'];
-const BEDS_OPTIONS = ['Any beds', '1+ beds', '2+ beds', '3+ beds', '4+ beds', '5+ beds'];
-const BATHS_OPTIONS = ['Any baths', '1+ baths', '2+ baths', '3+ baths', '4+ baths'];
-const PRICE_RANGE_OPTIONS = ['Any price', 'Under $100K', '$100K–$300K', '$300K–$500K', '$500K–$1M', 'Over $1M'];
-const RADIUS_OPTIONS = ['Any radius', 'This area only', '+ 1 km', '+ 3 km', '+ 5 km', '+ 10 km'];
+/* ── Main search bar options (unchanged) ── */
+const RADIUS_OPTIONS = [
+  'This area only',
+  '½ mile',
+  '1 mile',
+  '3 miles',
+  '5 miles',
+  '10 miles',
+  '15 miles',
+  '20 miles',
+  '30 miles',
+  '40 miles',
+] as const;
 
-/* ── Design System Tokens ── */
-const DS = {
-  height: 'h-12',
-  radius: 'rounded-[4px]',
-  weight: 'font-semibold',
-  transition: 'transition-all duration-200 ease',
-  primary: {
-    bg: 'bg-[#0d5959]',
-    bgHover: 'hover:bg-[#0b4f4f]',
-    text: 'text-white',
-    textHover: '',
-    border: 'border border-transparent',
-    borderHover: '',
-  },
-  secondary: {
-    bg: 'bg-white',
-    bgHover: 'hover:bg-[#0d5959]',
-    text: 'text-[#0d5959]',
-    textHover: 'hover:text-white',
-    border: 'border border-[#d1d5db]',
-    borderHover: 'hover:border-[#0d5959]',
-  },
-  utility: {
-    bg: 'bg-white',
-    bgHover: 'hover:bg-[#001731]',
-    text: 'text-[#001731]',
-    textHover: 'hover:text-white',
-    border: 'border border-[#9ca3af]',
-    borderHover: 'hover:border-[#001731]',
-  },
-} as const;
+const BEDS_OPTIONS = ['Any beds', 'Studio', '1+', '2+', '3+', '4+', '5+'] as const;
 
-function btnClass(variant: 'primary' | 'secondary' | 'utility', extra = '') {
-  const v = DS[variant];
-  return [
-    'flex items-center gap-2',
-    'text-sm font-roboto',
-    DS.height,
-    DS.radius,
-    DS.weight,
-    DS.transition,
-    'cursor-pointer whitespace-nowrap',
-    v.bg,
-    v.bgHover,
-    v.text,
-    ...(v.textHover ? [v.textHover] : []),
-    v.border,
-    ...(v.borderHover ? [v.borderHover] : []),
-    extra,
-  ].join(' ');
-}
+const PRICE_OPTIONS_RENT = [
+  'Any price',
+  'Under $250 pcm',
+  '$250 – $500 pcm',
+  '$500 – $750 pcm',
+  '$750 – $1,000 pcm',
+  '$1,000 – $1,500 pcm',
+  '$1,500 – $2,500 pcm',
+  '$2,500 – $5,000 pcm',
+  '$5,000 – $7,500 pcm',
+  '$7,500 – $10,000 pcm',
+  '$10,000 – $20,000 pcm',
+  '$20,000 – $30,000 pcm',
+  'Over $30,000 pcm',
+] as const;
 
-interface DropdownProps {
-  open: boolean;
-  children: React.ReactNode;
-  className?: string;
-}
+const PRICE_OPTIONS_BUY = [
+  'Any price',
+  'Under $50K',
+  '$50K – $100K',
+  '$100K – $200K',
+  '$200K – $300K',
+  '$300K – $500K',
+  '$500K – $750K',
+  '$750K – $1M',
+  '$1M – $1.5M',
+  '$1.5M – $2.5M',
+  '$2.5M – $5M',
+  '$5M – $10M',
+  'Over $10M',
+] as const;
 
-function Dropdown({ open, children, className = '' }: DropdownProps) {
-  if (!open) return null;
-  return (
-    <div className={`absolute top-full left-0 mt-1 bg-white border border-gray-200 z-50 min-w-[160px] py-1 ${className}`}>
-      {children}
-    </div>
-  );
-}
+const TYPE_OPTIONS = [
+  'Any type',
+  'Apartment',
+  'House',
+  'Villa',
+  'Penthouse',
+  'Townhouse',
+  'Studio',
+  'Land',
+  'Commercial',
+] as const;
 
-interface OceansPropertySearchBarProps {
-  targetPath?: string;
-  controlled?: boolean;
-  value?: SearchBarValue;
-  onChange?: (value: SearchBarValue) => void;
-}
+const STATUS_OPTIONS = ['For Sale', 'For Rent'] as const;
 
+/* ── Advanced filter options ── */
+const ADVANCED_PROPERTY_TYPES = [
+  'Apartment',
+  'House',
+  'Villa',
+  'Penthouse',
+  'Townhouse',
+  'Studio',
+  'Land',
+  'Commercial',
+] as const;
+
+const PROPERTY_FEATURES = [
+  'New',
+  'Period property',
+  'Cottage',
+  'Modern',
+  'Utility room',
+  'Basement',
+  'Conservatory',
+  'Home office',
+  'En-suite',
+  'Bathtub',
+  'Patio',
+  'Kitchen island',
+] as const;
+
+const MUST_HAVES = [
+  'Garden',
+  'Parking/garage',
+  'Balcony/terrace',
+  'Pets allowed',
+  'Bills included',
+  'Swimming pool',
+  'Gym',
+  'Power backup',
+] as const;
+
+const FURNISHING_OPTIONS = ['Any', 'Furnished', 'Part-furnished', 'Unfurnished'] as const;
+
+const AVAILABILITY_OPTIONS = [
+  'Show all',
+  'Immediately',
+  'Within 1 month',
+  'Within 3 months',
+  'Within 6 months',
+  'Within 1 year',
+] as const;
+
+const ADDED_OPTIONS = [
+  'Anytime',
+  'Last 24 hours',
+  'Last 3 days',
+  'Last 7 days',
+  'Last 14 days',
+  'Last 30 days',
+] as const;
+
+const INCLUDE_EXCLUDE_OPTIONS = ['House share', 'Student accommodation'] as const;
+
+const BEDS_MIN_OPTIONS = ['No min', 'Studio', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10+'] as const;
+const BEDS_MAX_OPTIONS = ['No max', 'Studio', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10+'] as const;
+const BATHS_MIN_OPTIONS = ['No min', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10+'] as const;
+const BATHS_MAX_OPTIONS = ['No max', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10+'] as const;
+const PRICE_MIN_OPTIONS_RENT = ['No min', '$250', '$500', '$750', '$1,000', '$1,500', '$2,500', '$5,000', '$7,500', '$10,000', '$20,000', '$30,000'] as const;
+const PRICE_MAX_OPTIONS_RENT = ['No max', '$250', '$500', '$750', '$1,000', '$1,500', '$2,500', '$5,000', '$7,500', '$10,000', '$20,000', '$30,000'] as const;
+const PRICE_MIN_OPTIONS_BUY = ['No min', '$50K', '$100K', '$200K', '$300K', '$500K', '$750K', '$1M', '$1.5M', '$2.5M', '$5M', '$10M'] as const;
+const PRICE_MAX_OPTIONS_BUY = ['No max', '$50K', '$100K', '$200K', '$300K', '$500K', '$750K', '$1M', '$1.5M', '$2.5M', '$5M', '$10M'] as const;
+const PRICE_FREQ_OPTIONS = ['Daily', 'Weekly', 'Monthly'] as const;
+
+type TriState = 'include' | 'exclude' | 'show_only' | null;
+
+/* ── Types ── */
 export interface SearchBarValue {
   query: string;
   status: string;
@@ -94,6 +147,34 @@ export interface SearchBarValue {
   beds: string;
   baths: string;
   priceRange: string;
+  radius?: string;
+  /* Advanced filters */
+  advancedPropertyTypes?: string[];
+  includeExcludeFilters?: Record<string, TriState>;
+  mustHaves?: string[];
+  propertyFeatures?: string[];
+  furnishing?: string;
+  availability?: string;
+  addedToSite?: string;
+  advancedKeywords?: string;
+  showLetAgreed?: boolean;
+  showSold?: boolean;
+  /* Mobile min/max filters */
+  bedsMin?: string;
+  bedsMax?: string;
+  bathsMin?: string;
+  bathsMax?: string;
+  priceMin?: string;
+  priceMax?: string;
+  priceFrequency?: string;
+}
+
+interface OceansPropertySearchBarProps {
+  targetPath?: string;
+  controlled?: boolean;
+  value?: SearchBarValue;
+  onChange?: (value: SearchBarValue) => void;
+  onSearch?: (value: SearchBarValue) => void;
 }
 
 interface Suggestion {
@@ -105,13 +186,35 @@ interface Suggestion {
 const DEFAULT_VALUE: SearchBarValue = {
   query: '',
   status: 'For Sale',
-  type: 'Any Type',
+  type: 'Any type',
   maxPrice: 'Max. Price',
   location: 'Any',
-  beds: 'Any',
+  beds: 'Any beds',
   baths: 'Any',
   priceRange: 'Any',
+  radius: 'This area only',
+  advancedPropertyTypes: [],
+  includeExcludeFilters: {},
+  mustHaves: [],
+  propertyFeatures: [],
+  furnishing: 'Any',
+  availability: 'Show all',
+  addedToSite: 'Anytime',
+  advancedKeywords: '',
+  showLetAgreed: false,
+  showSold: false,
+  bedsMin: 'No min',
+  bedsMax: 'No max',
+  bathsMin: 'No min',
+  bathsMax: 'No max',
+  priceMin: 'No min',
+  priceMax: 'No max',
+  priceFrequency: 'Monthly',
 };
+
+function isRentPath(path: string): boolean {
+  return path.includes('/rent');
+}
 
 function valueFromParams(params: URLSearchParams): SearchBarValue {
   const purpose = params.get('purpose');
@@ -122,13 +225,141 @@ function valueFromParams(params: URLSearchParams): SearchBarValue {
   return {
     query: params.get('q') || '',
     status,
-    type: params.get('type') || 'Any Type',
+    type: params.get('type') || 'Any type',
     maxPrice: params.get('maxPrice') ? `$${params.get('maxPrice')}` : 'Max. Price',
     location: params.get('area') || 'Any',
-    beds: params.get('beds') ? `${params.get('beds')}+` : 'Any',
+    beds: params.get('beds') ? `${params.get('beds')}+` : 'Any beds',
     baths: 'Any',
-    priceRange: 'Any',
+    priceRange: params.get('priceRange') || 'Any',
+    radius: params.get('radius') || 'This area only',
+    advancedPropertyTypes: [],
+    includeExcludeFilters: {},
+    mustHaves: [],
+    propertyFeatures: [],
+    furnishing: 'Any',
+    availability: 'Show all',
+    addedToSite: 'Anytime',
+    advancedKeywords: '',
+    showLetAgreed: false,
   };
+}
+
+/* ── Select Styling Helper ── */
+const selectBaseClass =
+  'appearance-none h-11 px-4 pr-9 text-base font-roboto font-medium text-[#374151] bg-white border border-[#d1d5db] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 cursor-pointer whitespace-nowrap transition-colors';
+
+/* ── TriState Toggle Component ── */
+function TriStateToggle({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: TriState;
+  onChange: (v: TriState) => void;
+}) {
+  const states: { key: TriState; label: string; icon: string }[] = [
+    { key: 'include', label: 'Include', icon: 'ri-add-circle-line' },
+    { key: 'exclude', label: 'Exclude', icon: 'ri-close-circle-line' },
+    { key: 'show_only', label: 'Show only', icon: 'ri-checkbox-circle-line' },
+  ];
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-roboto font-semibold uppercase tracking-widest text-stone-400">
+        {label}
+      </span>
+      <div className="flex gap-0.5 bg-stone-100 rounded-lg p-0.5">
+        {states.map((s) => {
+          const isActive = value === s.key;
+          return (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => onChange(isActive ? null : s.key)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-roboto font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                isActive
+                  ? 'bg-white text-[#374151] shadow-sm'
+                  : 'text-stone-400 hover:text-stone-500'
+              }`}
+            >
+              <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
+                <i className={`${s.icon} text-xs`} />
+              </span>
+              {s.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Shared select for advanced panel ── */
+function PanelSelect({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="relative">
+      <label className="block text-[12px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none mb-1.5">
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="appearance-none w-full h-11 px-3 pr-9 text-sm font-roboto font-medium text-[#374151] bg-white border border-[#d1d5db] rounded-lg focus:outline-none focus:border-primary cursor-pointer"
+      >
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+      <span className="w-4 h-4 flex items-center justify-center absolute right-2.5 bottom-[11px] text-stone-400 pointer-events-none">
+        <i className="ri-arrow-down-s-line text-sm" />
+      </span>
+    </div>
+  );
+}
+
+/* ── Checkbox chip ── */
+function CheckChip({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-1.5 cursor-pointer group">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      <span
+        className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+          checked
+            ? 'bg-primary border-primary'
+            : 'border-[#d1d5db] bg-white group-hover:border-stone-400'
+        }`}
+      >
+        {checked && <i className="ri-check-line text-[10px] text-white" />}
+      </span>
+      <span className="text-sm font-roboto text-[#374151] whitespace-nowrap">{label}</span>
+    </label>
+  );
 }
 
 export default function OceansPropertySearchBar({
@@ -136,24 +367,52 @@ export default function OceansPropertySearchBar({
   controlled = false,
   value,
   onChange,
+  onSearch,
 }: OceansPropertySearchBarProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const isRent = isRentPath(targetPath);
+  const { user } = useAuth();
 
   const isControlled = controlled && value !== undefined;
   const initialValue = isControlled ? value! : valueFromParams(searchParams);
 
+  /* ── Main search state ── */
   const [query, setQuery] = useState(initialValue.query);
   const [status, setStatus] = useState(initialValue.status);
-  const [type, setType] = useState(initialValue.type);
-  const [maxPrice, setMaxPrice] = useState(initialValue.maxPrice);
-  const [advanced, setAdvanced] = useState(false);
-
-  const [location, setLocation] = useState(initialValue.location);
+  const [radius, setRadius] = useState(initialValue.radius || 'This area only');
   const [beds, setBeds] = useState(initialValue.beds);
-  const [baths, setBaths] = useState(initialValue.baths);
-  const [priceRange, setPriceRange] = useState(initialValue.priceRange);
-  const [radius, setRadius] = useState('Any radius');
+  const [priceRange, setPriceRange] = useState(
+    initialValue.priceRange === 'Any' ? 'Any price' : initialValue.priceRange
+  );
+  const [type, setType] = useState(initialValue.type);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  /* ── Advanced filter state ── */
+  const [advancedPropertyTypes, setAdvancedPropertyTypes] = useState<string[]>(
+    initialValue.advancedPropertyTypes || []
+  );
+  const [includeExcludeFilters, setIncludeExcludeFilters] = useState<Record<string, TriState>>(
+    initialValue.includeExcludeFilters || {}
+  );
+  const [mustHaves, setMustHaves] = useState<string[]>(initialValue.mustHaves || []);
+  const [propertyFeatures, setPropertyFeatures] = useState<string[]>(
+    initialValue.propertyFeatures || []
+  );
+  const [furnishing, setFurnishing] = useState(initialValue.furnishing || 'Any');
+  const [availability, setAvailability] = useState(initialValue.availability || 'Show all');
+  const [addedToSite, setAddedToSite] = useState(initialValue.addedToSite || 'Anytime');
+  const [advancedKeywords, setAdvancedKeywords] = useState(initialValue.advancedKeywords || '');
+  const [showLetAgreed, setShowLetAgreed] = useState(initialValue.showLetAgreed || false);
+  const [showSold, setShowSold] = useState(initialValue.showSold || false);
+  /* Mobile min/max state */
+  const [bedsMin, setBedsMin] = useState(initialValue.bedsMin || 'No min');
+  const [bedsMax, setBedsMax] = useState(initialValue.bedsMax || 'No max');
+  const [bathsMin, setBathsMin] = useState(initialValue.bathsMin || 'No min');
+  const [bathsMax, setBathsMax] = useState(initialValue.bathsMax || 'No max');
+  const [priceMin, setPriceMin] = useState(initialValue.priceMin || 'No min');
+  const [priceMax, setPriceMax] = useState(initialValue.priceMax || 'No max');
+  const [priceFrequency, setPriceFrequency] = useState(initialValue.priceFrequency || 'Monthly');
 
   /* Autocomplete */
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -161,18 +420,106 @@ export default function OceansPropertySearchBar({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const queryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [statusOpen, setStatusOpen] = useState(false);
-  const [typeOpen, setTypeOpen] = useState(false);
-  const [priceOpen, setPriceOpen] = useState(false);
-  const [locationOpen, setLocationOpen] = useState(false);
-  const [bedsOpen, setBedsOpen] = useState(false);
-  const [bathsOpen, setBathsOpen] = useState(false);
-  const [priceRangeOpen, setPriceRangeOpen] = useState(false);
-  const [radiusOpen, setRadiusOpen] = useState(false);
+  /* Save search modal */
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const barRef = useRef<HTMLDivElement>(null);
+  const filtersPanelRef = useRef<HTMLDivElement>(null);
 
-  /* ── Autocomplete fetch ── */
+  /* ── Price options based on status select ── */
+  const priceOptions = status === 'For Rent' ? PRICE_OPTIONS_RENT : PRICE_OPTIONS_BUY;
+
+  /* ── Sync with external value (controlled) ── */
+  useEffect(() => {
+    if (!isControlled || !value) return;
+    setQuery(value.query);
+    setStatus(value.status);
+    setRadius(value.radius || 'This area only');
+    setBeds(value.beds === 'Any' ? 'Any beds' : value.beds);
+    setPriceRange(value.priceRange === 'Any' ? 'Any price' : value.priceRange);
+    setType(value.type);
+    setAdvancedPropertyTypes(value.advancedPropertyTypes || []);
+    setIncludeExcludeFilters(value.includeExcludeFilters || {});
+    setMustHaves(value.mustHaves || []);
+    setPropertyFeatures(value.propertyFeatures || []);
+    setFurnishing(value.furnishing || 'Any');
+    setAvailability(value.availability || 'Show all');
+    setAddedToSite(value.addedToSite || 'Anytime');
+    setAdvancedKeywords(value.advancedKeywords || '');
+    setShowLetAgreed(value.showLetAgreed || false);
+    setShowSold(value.showSold || false);
+    setBedsMin(value.bedsMin || 'No min');
+    setBedsMax(value.bedsMax || 'No max');
+    setBathsMin(value.bathsMin || 'No min');
+    setBathsMax(value.bathsMax || 'No max');
+    setPriceMin(value.priceMin || 'No min');
+    setPriceMax(value.priceMax || 'No max');
+    setPriceFrequency(value.priceFrequency || 'Monthly');
+  }, [isControlled, value]);
+
+  /* ── Sync with URL params (uncontrolled) ── */
+  useEffect(() => {
+    if (controlled) return;
+    const v = valueFromParams(searchParams);
+    setQuery(v.query);
+    setStatus(v.status);
+    setRadius(v.radius || 'This area only');
+    setBeds(v.beds === 'Any' ? 'Any beds' : v.beds);
+    setPriceRange(v.priceRange === 'Any' ? 'Any price' : v.priceRange);
+    setType(v.type);
+    setAdvancedPropertyTypes(v.advancedPropertyTypes || []);
+    setIncludeExcludeFilters(v.includeExcludeFilters || {});
+    setMustHaves(v.mustHaves || []);
+    setPropertyFeatures(v.propertyFeatures || []);
+    setFurnishing(v.furnishing || 'Any');
+    setAvailability(v.availability || 'Show all');
+    setAddedToSite(v.addedToSite || 'Anytime');
+    setAdvancedKeywords(v.advancedKeywords || '');
+    setShowLetAgreed(v.showLetAgreed || false);
+    setShowSold(v.showSold || false);
+    setBedsMin(v.bedsMin || 'No min');
+    setBedsMax(v.bedsMax || 'No max');
+    setBathsMin(v.bathsMin || 'No min');
+    setBathsMax(v.bathsMax || 'No max');
+    setPriceMin(v.priceMin || 'No min');
+    setPriceMax(v.priceMax || 'No max');
+    setPriceFrequency(v.priceFrequency || 'Monthly');
+  }, [searchParams, controlled]);
+
+  /* ── Click outside ── */
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (barRef.current && !barRef.current.contains(e.target as Node)) {
+        setSuggestionsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  /* ── Close filters panel on outside click ── */
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        filtersPanelRef.current &&
+        !filtersPanelRef.current.contains(e.target as Node) &&
+        barRef.current &&
+        !barRef.current.contains(e.target as Node)
+      ) {
+        setFiltersOpen(false);
+      }
+    }
+    if (filtersOpen) {
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }
+  }, [filtersOpen]);
+
+  /* ── Autocomplete ── */
   useEffect(() => {
     if (queryTimeoutRef.current) clearTimeout(queryTimeoutRef.current);
     if (!query.trim() || query.trim().length < 2) {
@@ -190,7 +537,13 @@ export default function OceansPropertySearchBar({
   async function fetchSuggestions(q: string) {
     const escaped = q.replace(/[%_]/g, '\\$&');
 
-    const [{ data: nbByName }, { data: nbByCity }, { data: lsByAddr }, { data: lsByCity }, { data: lsByLoc }] = await Promise.all([
+    const [
+      { data: nbByName },
+      { data: nbByCity },
+      { data: lsByAddr },
+      { data: lsByCity },
+      { data: lsByLoc },
+    ] = await Promise.all([
       supabase.from('neighborhoods').select('name, city').ilike('name', `%${escaped}%`).eq('published', true).limit(3),
       supabase.from('neighborhoods').select('name, city').ilike('city', `%${escaped}%`).eq('published', true).limit(2),
       supabase.from('listings').select('address, city, location').ilike('address', `%${escaped}%`).eq('published', true).limit(3),
@@ -255,26 +608,32 @@ export default function OceansPropertySearchBar({
   function renderSuggestionsDropdown() {
     if (!suggestionsOpen || suggestions.length === 0) return null;
     return (
-      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-[4px] shadow-lg z-50 py-1 max-h-64 overflow-y-auto">
+      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 max-h-64 overflow-y-auto">
         {suggestions.map((s, i) => (
           <div
             key={`${s.type}-${s.value}-${i}`}
             className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-colors ${
-              i === highlightedIndex ? 'bg-[#f0f7f7]' : 'hover:bg-[#f5f5f5]'
+              i === highlightedIndex ? 'bg-primary/8' : 'hover:bg-gray-50'
             }`}
             onClick={() => selectSuggestion(s)}
             onMouseEnter={() => setHighlightedIndex(i)}
           >
             <span className="w-4 h-4 flex items-center justify-center shrink-0">
-              <i className={`text-stone-400 text-sm ${
-                s.type === 'neighborhood' ? 'ri-map-pin-line' :
-                s.type === 'city' ? 'ri-building-line' :
-                'ri-home-4-line'
-              }`} />
+              <i
+                className={`text-stone-400 text-sm ${
+                  s.type === 'neighborhood'
+                    ? 'ri-map-pin-line'
+                    : s.type === 'city'
+                      ? 'ri-building-line'
+                      : 'ri-home-4-line'
+                }`}
+              />
             </span>
             <div className="flex flex-col min-w-0 flex-1">
               <span className="text-sm font-roboto text-[#374151] truncate">{s.label}</span>
-              <span className="text-[11px] font-roboto text-stone-400 capitalize leading-tight">{s.type}</span>
+              <span className="text-[11px] font-roboto text-stone-400 capitalize leading-tight">
+                {s.type}
+              </span>
             </div>
           </div>
         ))}
@@ -282,137 +641,753 @@ export default function OceansPropertySearchBar({
     );
   }
 
-  useEffect(() => {
-    if (controlled) return;
-    const v = valueFromParams(searchParams);
-    setQuery(v.query);
-    setStatus(v.status);
-    setType(v.type);
-    setMaxPrice(v.maxPrice);
-    setLocation(v.location);
-    setBeds(v.beds);
-    setBaths(v.baths);
-    setPriceRange(v.priceRange);
-  }, [searchParams, controlled]);
-
-  useEffect(() => {
-    if (!isControlled || !value) return;
-    setQuery(value.query);
-    setStatus(value.status);
-    setType(value.type);
-    setMaxPrice(value.maxPrice);
-    setLocation(value.location);
-    setBeds(value.beds);
-    setBaths(value.baths);
-    setPriceRange(value.priceRange);
-  }, [isControlled, value]);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (barRef.current && !barRef.current.contains(e.target as Node)) {
-        setStatusOpen(false);
-        setTypeOpen(false);
-        setPriceOpen(false);
-        setLocationOpen(false);
-        setBedsOpen(false);
-        setBathsOpen(false);
-        setPriceRangeOpen(false);
-        setSuggestionsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, []);
-
-  function closeAll() {
-    setStatusOpen(false);
-    setTypeOpen(false);
-    setPriceOpen(false);
-    setLocationOpen(false);
-    setBedsOpen(false);
-    setBathsOpen(false);
-    setPriceRangeOpen(false);
-    setRadiusOpen(false);
-    setSuggestionsOpen(false);
+  /* ── Build the current value snapshot ── */
+  function buildValue(overrides: Partial<SearchBarValue> = {}): SearchBarValue {
+    return {
+      query: overrides.query ?? query,
+      status: overrides.status ?? status,
+      type: overrides.type ?? type,
+      maxPrice: overrides.maxPrice ?? (priceRange === 'Any price' ? 'Max. Price' : priceRange),
+      location: overrides.location ?? 'Any',
+      beds: overrides.beds ?? beds,
+      baths: overrides.baths ?? 'Any',
+      priceRange: overrides.priceRange ?? priceRange,
+      radius: overrides.radius ?? radius,
+      advancedPropertyTypes: overrides.advancedPropertyTypes ?? advancedPropertyTypes,
+      includeExcludeFilters: overrides.includeExcludeFilters ?? includeExcludeFilters,
+      mustHaves: overrides.mustHaves ?? mustHaves,
+      propertyFeatures: overrides.propertyFeatures ?? propertyFeatures,
+      furnishing: overrides.furnishing ?? furnishing,
+      availability: overrides.availability ?? availability,
+      addedToSite: overrides.addedToSite ?? addedToSite,
+      advancedKeywords: overrides.advancedKeywords ?? advancedKeywords,
+      showLetAgreed: overrides.showLetAgreed ?? showLetAgreed,
+      showSold: overrides.showSold ?? showSold,
+      bedsMin: overrides.bedsMin ?? bedsMin,
+      bedsMax: overrides.bedsMax ?? bedsMax,
+      bathsMin: overrides.bathsMin ?? bathsMin,
+      bathsMax: overrides.bathsMax ?? bathsMax,
+      priceMin: overrides.priceMin ?? priceMin,
+      priceMax: overrides.priceMax ?? priceMax,
+      priceFrequency: overrides.priceFrequency ?? priceFrequency,
+    };
   }
 
   function emitChange(overrides: Partial<SearchBarValue> = {}) {
     if (onChange) {
-      onChange({
-        query,
-        status,
-        type,
-        maxPrice,
-        location,
-        beds,
-        baths,
-        priceRange,
-        ...overrides,
-      });
+      onChange(buildValue(overrides));
     }
   }
 
   function handleSearch(overrideQuery?: string) {
     const q = overrideQuery ?? query;
+    const effectiveStatus = status;
+    const purposeParam = effectiveStatus === 'For Rent' ? 'rent' : 'sale';
+    const currentValue = buildValue({ query: q, status: effectiveStatus });
+
+    if (isControlled && onSearch) {
+      onSearch(currentValue);
+      return;
+    }
+
     if (isControlled && onChange) {
-      emitChange({ query: q });
+      emitChange({ query: q, status: effectiveStatus });
       return;
     }
     const params = new URLSearchParams();
     if (q.trim()) params.set('q', q.trim());
-    params.set('purpose', status === 'For Rent' ? 'rent' : 'sale');
-    if (type !== 'Any Type') params.set('type', type);
-    if (maxPrice !== 'Max. Price') params.set('maxPrice', maxPrice.replace(/[^0-9]/g, ''));
-    if (location !== 'Any') params.set('area', location);
-    if (beds !== 'Any') params.set('beds', beds.replace('+', ''));
+    params.set('purpose', purposeParam);
+    if (type !== 'Any type') params.set('type', type);
+    if (priceRange !== 'Any price') params.set('priceRange', priceRange);
+    if (beds !== 'Any beds') params.set('beds', beds.replace('+', ''));
+    if (radius !== 'This area only') params.set('radius', radius);
+    if (advancedPropertyTypes.length > 0) params.set('advTypes', advancedPropertyTypes.join(','));
+    if (furnishing !== 'Any') params.set('furnishing', furnishing);
+    if (availability !== 'Show all') params.set('availability', availability);
+    if (addedToSite !== 'Anytime') params.set('added', addedToSite);
+    if (advancedKeywords.trim()) params.set('advKeywords', advancedKeywords.trim());
+    if (showLetAgreed) params.set('letAgreed', '1');
     navigate(`${targetPath}?${params.toString()}`);
   }
 
   function handleClear() {
     setQuery('');
-    setStatus('For Sale');
-    setType('Any Type');
-    setMaxPrice('Max. Price');
-    setLocation('Any');
+    setStatus(isRent ? 'For Rent' : 'For Sale');
+    setRadius('This area only');
     setBeds('Any beds');
-    setBaths('Any baths');
     setPriceRange('Any price');
-    setRadius('Any radius');
-    setAdvanced(false);
+    setType('Any type');
+    setAdvancedPropertyTypes([]);
+    setIncludeExcludeFilters({});
+    setMustHaves([]);
+    setPropertyFeatures([]);
+    setFurnishing('Any');
+    setAvailability('Show all');
+    setAddedToSite('Anytime');
+    setAdvancedKeywords('');
+    setShowLetAgreed(false);
+    setShowSold(false);
+    setBedsMin('No min');
+    setBedsMax('No max');
+    setBathsMin('No min');
+    setBathsMax('No max');
+    setPriceMin('No min');
+    setPriceMax('No max');
+    setPriceFrequency('Monthly');
+    setFiltersOpen(false);
     setSuggestions([]);
     setSuggestionsOpen(false);
     setHighlightedIndex(-1);
-    closeAll();
-    if (onChange) onChange({ ...DEFAULT_VALUE });
-    if (!controlled) navigate(`${targetPath}`);
+    if (onChange) onChange({ ...DEFAULT_VALUE, status: isRent ? 'For Rent' : 'For Sale' });
+    if (!controlled) navigate(targetPath);
   }
 
-  const optionClass = 'px-4 py-2 text-sm font-roboto text-stone-600 hover:bg-[#f5f5f5] cursor-pointer whitespace-nowrap transition-colors';
-  const activeOptionClass = 'px-4 py-2 text-sm font-roboto text-[#115e59] font-semibold bg-[#f5f5f5] cursor-pointer whitespace-nowrap';
+  function handleSaveSearch() {
+    if (!user) {
+      if (onChange) emitChange();
+      return;
+    }
+    const currentValue = buildValue();
+    setSaveName(currentValue.query || `Search — ${new Date().toLocaleDateString()}`);
+    setSaveError(null);
+    setSaveSuccess(false);
+    setSaveModalOpen(true);
+  }
 
-  function MobileField({ label, value, onClick }: { label: string; value: string; onClick: () => void }) {
+  async function handleSaveConfirm() {
+    if (!user || !saveName.trim()) return;
+    setSaveLoading(true);
+    setSaveError(null);
+    const criteria = buildValue();
+    const { error } = await supabase.from('saved_searches').insert({
+      user_id: user.id,
+      name: saveName.trim(),
+      criteria,
+      alert_enabled: false,
+      frequency: 'daily',
+    });
+    setSaveLoading(false);
+    if (error) {
+      setSaveError(error.message);
+    } else {
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveModalOpen(false);
+        setSaveSuccess(false);
+        setSaveName('');
+      }, 1500);
+    }
+  }
+
+  /* ── Shared inline select component ── */
+  function InlineSelect({
+    options,
+    value,
+    onChange: onSelectChange,
+    id,
+  }: {
+    options: readonly string[];
+    value: string;
+    onChange: (v: string) => void;
+    id: string;
+  }) {
+    const selectId = `searchbar-${id}`;
     return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="w-full flex items-center justify-between px-3 h-[42px] border border-[#d1d5db] rounded-[4px] bg-white text-left cursor-pointer"
-      >
-        <div className="flex flex-col">
-          <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">{label}</span>
-          <span className="text-[13px] font-roboto text-stone-600 leading-tight mt-0.5">{value}</span>
-        </div>
-        <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-          <i className="ri-arrow-down-s-line text-stone-400 text-sm" />
+      <div className="relative">
+        <select
+          id={selectId}
+          value={value}
+          onChange={(e) => onSelectChange(e.target.value)}
+          className={selectBaseClass}
+        >
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        <span className="w-4 h-4 flex items-center justify-center absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none">
+          <i className="ri-arrow-down-s-line text-sm" />
         </span>
-      </button>
+      </div>
     );
   }
 
-  function MobileDropdown({ open, children }: { open: boolean; children: React.ReactNode }) {
-    if (!open) return null;
+  /* ── Toggle advanced type chip ── */
+  function toggleAdvancedType(t: string) {
+    setAdvancedPropertyTypes((prev) => {
+      const next = prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t];
+      emitChange({ advancedPropertyTypes: next });
+      return next;
+    });
+  }
+
+  function toggleMustHave(m: string) {
+    setMustHaves((prev) => {
+      const next = prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m];
+      emitChange({ mustHaves: next });
+      return next;
+    });
+  }
+
+  function toggleFeature(f: string) {
+    setPropertyFeatures((prev) => {
+      const next = prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f];
+      emitChange({ propertyFeatures: next });
+      return next;
+    });
+  }
+
+  function setTriState(key: string, state: TriState) {
+    setIncludeExcludeFilters((prev) => {
+      const next = { ...prev };
+      if (state === null) {
+        delete next[key];
+      } else {
+        next[key] = state;
+      }
+      emitChange({ includeExcludeFilters: next });
+      return next;
+    });
+  }
+
+  const isRentPage = status === 'For Rent';
+  const hasAnyAdvancedFilter =
+    advancedPropertyTypes.length > 0 ||
+    Object.keys(includeExcludeFilters).length > 0 ||
+    mustHaves.length > 0 ||
+    propertyFeatures.length > 0 ||
+    furnishing !== 'Any' ||
+    availability !== 'Show all' ||
+    addedToSite !== 'Anytime' ||
+    advancedKeywords.trim().length > 0 ||
+    showLetAgreed ||
+    showSold;
+
+  /* ══════════════════════════════════════════
+     MOBILE ADVANCED FILTERS PANEL
+     Starts with search → radius → beds min/max → baths min/max → price min/max → type → include/exclude → must-haves → actions
+     ══════════════════════════════════════════ */
+  function renderMobileAdvancedFiltersPanel() {
+    const priceMinOpts = status === 'For Rent' ? PRICE_MIN_OPTIONS_RENT : PRICE_MIN_OPTIONS_BUY;
+    const priceMaxOpts = status === 'For Rent' ? PRICE_MAX_OPTIONS_RENT : PRICE_MAX_OPTIONS_BUY;
+
     return (
-      <div className="bg-white border border-gray-200 rounded-[4px] z-50 py-1 mb-1">
-        {children}
+      <div className="px-4 py-4">
+        {/* ── Main search + Radius ── */}
+        <div className="mb-4">
+          <label className="block text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none mb-1.5">
+            Radius
+          </label>
+          <InlineSelect
+            id="mobile-radius"
+            options={RADIUS_OPTIONS}
+            value={radius}
+            onChange={(v) => {
+              setRadius(v);
+              emitChange({ radius: v });
+            }}
+          />
+        </div>
+
+        <div className="w-full h-px bg-stone-100 mb-4" />
+
+        {/* ── Bedrooms (min/max) ── */}
+        <div className="mb-4">
+          <h4 className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 mb-2">
+            Bedrooms
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            <PanelSelect
+              label="Min beds"
+              options={BEDS_MIN_OPTIONS}
+              value={bedsMin}
+              onChange={(v) => {
+                setBedsMin(v);
+                emitChange({ bedsMin: v });
+              }}
+            />
+            <PanelSelect
+              label="Max beds"
+              options={BEDS_MAX_OPTIONS}
+              value={bedsMax}
+              onChange={(v) => {
+                setBedsMax(v);
+                emitChange({ bedsMax: v });
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="w-full h-px bg-stone-100 mb-4" />
+
+        {/* ── Bathrooms (min/max) ── */}
+        <div className="mb-4">
+          <h4 className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 mb-2">
+            Bathrooms
+          </h4>
+          <div className="grid grid-cols-2 gap-3">
+            <PanelSelect
+              label="Min baths"
+              options={BATHS_MIN_OPTIONS}
+              value={bathsMin}
+              onChange={(v) => {
+                setBathsMin(v);
+                emitChange({ bathsMin: v });
+              }}
+            />
+            <PanelSelect
+              label="Max baths"
+              options={BATHS_MAX_OPTIONS}
+              value={bathsMax}
+              onChange={(v) => {
+                setBathsMax(v);
+                emitChange({ bathsMax: v });
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="w-full h-px bg-stone-100 mb-4" />
+
+        {/* ── Price (min/max + frequency) ── */}
+        <div className="mb-4">
+          <h4 className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 mb-2">
+            Price
+          </h4>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <PanelSelect
+              label="Min price"
+              options={priceMinOpts}
+              value={priceMin}
+              onChange={(v) => {
+                setPriceMin(v);
+                emitChange({ priceMin: v });
+              }}
+            />
+            <PanelSelect
+              label="Max price"
+              options={priceMaxOpts}
+              value={priceMax}
+              onChange={(v) => {
+                setPriceMax(v);
+                emitChange({ priceMax: v });
+              }}
+            />
+          </div>
+          <PanelSelect
+            label="Price per"
+            options={PRICE_FREQ_OPTIONS}
+            value={priceFrequency}
+            onChange={(v) => {
+              setPriceFrequency(v);
+              emitChange({ priceFrequency: v });
+            }}
+          />
+        </div>
+
+        <div className="w-full h-px bg-stone-100 mb-4" />
+
+        {/* ── Property type checkboxes ── */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400">
+              Property type
+            </h4>
+            <button
+              type="button"
+              onClick={() => {
+                setAdvancedPropertyTypes([...ADVANCED_PROPERTY_TYPES]);
+                emitChange({ advancedPropertyTypes: [...ADVANCED_PROPERTY_TYPES] });
+              }}
+              className="text-[10px] font-roboto font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer whitespace-nowrap ml-auto"
+            >
+              Show all
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+            {ADVANCED_PROPERTY_TYPES.map((t) => (
+              <CheckChip
+                key={t}
+                label={t}
+                checked={advancedPropertyTypes.includes(t)}
+                onChange={() => toggleAdvancedType(t)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="w-full h-px bg-stone-100 mb-4" />
+
+        {/* ── Include / Exclude / Show only ── */}
+        <div className="mb-4">
+          <h4 className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 mb-2">
+            Include, exclude &amp; show only
+          </h4>
+          <div className="flex flex-col gap-3">
+            {INCLUDE_EXCLUDE_OPTIONS.map((opt) => (
+              <TriStateToggle
+                key={opt}
+                label={opt}
+                value={includeExcludeFilters[opt] || null}
+                onChange={(s) => setTriState(opt, s)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="w-full h-px bg-stone-100 mb-4" />
+
+        {/* ── Must-haves ── */}
+        <div className="mb-4">
+          <h4 className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 mb-2">
+            Must-haves
+          </h4>
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+            {MUST_HAVES.map((m) => (
+              <CheckChip
+                key={m}
+                label={m}
+                checked={mustHaves.includes(m)}
+                onChange={() => toggleMustHave(m)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="w-full h-px bg-stone-100 mb-4" />
+
+        {/* ── Property type selects (furnishing / availability / added) ── */}
+        <div className="flex flex-col gap-3 mb-4">
+          <PanelSelect
+            label="Furnishing"
+            options={FURNISHING_OPTIONS}
+            value={furnishing}
+            onChange={(v) => {
+              setFurnishing(v);
+              emitChange({ furnishing: v });
+            }}
+          />
+          <PanelSelect
+            label="Availability"
+            options={AVAILABILITY_OPTIONS}
+            value={availability}
+            onChange={(v) => {
+              setAvailability(v);
+              emitChange({ availability: v });
+            }}
+          />
+          <PanelSelect
+            label="Added to site"
+            options={ADDED_OPTIONS}
+            value={addedToSite}
+            onChange={(v) => {
+              setAddedToSite(v);
+              emitChange({ addedToSite: v });
+            }}
+          />
+        </div>
+
+        <div className="w-full h-px bg-stone-100 mb-4" />
+
+        {/* ── Keywords ── */}
+        <div className="mb-4">
+          <label className="block text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none mb-1.5">
+            Keywords
+          </label>
+          <input
+            type="text"
+            value={advancedKeywords}
+            onChange={(e) => {
+              setAdvancedKeywords(e.target.value);
+              emitChange({ advancedKeywords: e.target.value });
+            }}
+            placeholder='e.g. conservatory or "double garage"'
+            className="w-full h-11 px-4 text-[13px] font-roboto font-medium text-[#374151] placeholder:text-stone-400 bg-white border border-[#d1d5db] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+          />
+        </div>
+
+        {/* ── Show Let Agreed / Sold ── */}
+        <div className="mb-5 flex flex-col gap-3">
+          {/* Let agreed toggle — show on rent pages and all-properties */}
+          {(!targetPath.includes('/buy') && !targetPath.includes('/sale')) || targetPath.includes('/all-properties') || isRentPage ? (
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showLetAgreed}
+                  onChange={(e) => {
+                    setShowLetAgreed(e.target.checked);
+                    emitChange({ showLetAgreed: e.target.checked });
+                  }}
+                  className="sr-only"
+                />
+                <div
+                  className={`w-9 h-5 rounded-full transition-colors ${
+                    showLetAgreed ? 'bg-primary' : 'bg-stone-200'
+                  }`}
+                >
+                  <div
+                    className={`w-4 h-4 bg-white rounded-full mt-0.5 transition-transform ${
+                      showLetAgreed ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                    }`}
+                  />
+                </div>
+              </label>
+              <span className="text-[13px] font-roboto font-medium text-[#374151]">
+                Show let or let agreed
+              </span>
+            </div>
+          ) : null}
+
+          {/* Sold toggle — show on sale pages and all-properties */}
+          {(!targetPath.includes('/rent')) || targetPath.includes('/all-properties') || !isRentPage ? (
+            <div className="flex items-center gap-3">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showSold}
+                  onChange={(e) => {
+                    setShowSold(e.target.checked);
+                    emitChange({ showSold: e.target.checked });
+                  }}
+                  className="sr-only"
+                />
+                <div
+                  className={`w-9 h-5 rounded-full transition-colors ${
+                    showSold ? 'bg-primary' : 'bg-stone-200'
+                  }`}
+                >
+                  <div
+                    className={`w-4 h-4 bg-white rounded-full mt-0.5 transition-transform ${
+                      showSold ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                    }`}
+                  />
+                </div>
+              </label>
+              <span className="text-[13px] font-roboto font-medium text-[#374151]">
+                Show sold
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        {/* ── Action buttons ── */}
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-stone-100">
+          <button
+            type="button"
+            onClick={handleClear}
+            className="flex items-center gap-2 h-11 px-4 text-base font-roboto font-medium text-[#374151] border border-[#d1d5db] rounded-lg hover:border-[#9ca3af] transition-colors cursor-pointer whitespace-nowrap"
+          >
+            Clear all
+          </button>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(false)}
+            className="flex items-center gap-2 h-11 px-6 bg-primary text-white text-base font-roboto font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer whitespace-nowrap ml-auto"
+          >
+            Apply &amp; Search
+          </button>
+        </div>
+      </div>
+    );
+  }
+  function renderAdvancedFiltersPanel() {
+    return (
+      <div className="px-4 md:px-6 py-5 max-w-[1400px] mx-auto">
+        {/* ── Row 1: Property type checkboxes ── */}
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="text-[12px] font-roboto font-semibold uppercase tracking-widest text-stone-400">
+              Property type
+            </h4>
+            <button
+              type="button"
+              onClick={() => {
+                setAdvancedPropertyTypes([...ADVANCED_PROPERTY_TYPES]);
+                emitChange({ advancedPropertyTypes: [...ADVANCED_PROPERTY_TYPES] });
+              }}
+              className="text-[12px] font-roboto font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer whitespace-nowrap ml-auto"
+            >
+              Show all
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+            {ADVANCED_PROPERTY_TYPES.map((t) => (
+              <CheckChip
+                key={t}
+                label={t}
+                checked={advancedPropertyTypes.includes(t)}
+                onChange={() => toggleAdvancedType(t)}
+              />
+            ))}
+          </div>
+        </div>
+
+
+        {/* ── Row 3: Must-haves ── */}
+        <div className="mb-5">
+          <h4 className="text-[12px] font-roboto font-semibold uppercase tracking-widest text-stone-400 mb-3">
+            Must-haves
+          </h4>
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+            {MUST_HAVES.map((m) => (
+              <CheckChip
+                key={m}
+                label={m}
+                checked={mustHaves.includes(m)}
+                onChange={() => toggleMustHave(m)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ── Row 4: Property features ── */}
+        <div className="mb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <h4 className="text-[12px] font-roboto font-semibold uppercase tracking-widest text-stone-400">
+              Property features
+            </h4>
+            <button
+              type="button"
+              onClick={() => {
+                setPropertyFeatures([...PROPERTY_FEATURES]);
+                emitChange({ propertyFeatures: [...PROPERTY_FEATURES] });
+              }}
+              className="text-[12px] font-roboto font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer whitespace-nowrap ml-auto"
+            >
+              Show all
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+            {PROPERTY_FEATURES.map((f) => (
+              <CheckChip
+                key={f}
+                label={f}
+                checked={propertyFeatures.includes(f)}
+                onChange={() => toggleFeature(f)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ── Row 5: Furnishing / Availability / Added / Beds ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+          <PanelSelect
+            label="Furnishing"
+            options={FURNISHING_OPTIONS}
+            value={furnishing}
+            onChange={(v) => {
+              setFurnishing(v);
+              emitChange({ furnishing: v });
+            }}
+          />
+          <PanelSelect
+            label="Availability"
+            options={AVAILABILITY_OPTIONS}
+            value={availability}
+            onChange={(v) => {
+              setAvailability(v);
+              emitChange({ availability: v });
+            }}
+          />
+          <PanelSelect
+            label="Added to site"
+            options={ADDED_OPTIONS}
+            value={addedToSite}
+            onChange={(v) => {
+              setAddedToSite(v);
+              emitChange({ addedToSite: v });
+            }}
+          />
+          <PanelSelect
+            label="Beds"
+            options={BEDS_OPTIONS}
+            value={beds}
+            onChange={(v) => {
+              setBeds(v);
+              emitChange({ beds: v });
+            }}
+          />
+        </div>
+
+        {/* ── Row 6: Keywords ── */}
+        <div className="mb-5">
+          <label className="block text-[12px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none mb-1.5">
+            Keywords
+          </label>
+          <div className="relative">
+            <input
+              type="text"
+              value={advancedKeywords}
+              onChange={(e) => {
+                setAdvancedKeywords(e.target.value);
+                emitChange({ advancedKeywords: e.target.value });
+              }}
+              placeholder='e.g. conservatory or "double garage"'
+              className="w-full h-11 px-4 text-sm font-roboto font-medium text-[#374151] placeholder:text-stone-400 bg-white border border-[#d1d5db] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+            />
+            <p className="text-[11px] font-roboto text-stone-400 mt-1 leading-tight">
+              Search for phrases by using quotation marks e.g. "double garage", or exclude terms by prefixing them with a minus sign e.g. -studio.
+            </p>
+          </div>
+        </div>
+
+        {/* ── Row 7: Show let / let agreed toggle ── */}
+        <div className="mb-5 flex items-center gap-3">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showLetAgreed}
+              onChange={(e) => {
+                setShowLetAgreed(e.target.checked);
+                emitChange({ showLetAgreed: e.target.checked });
+              }}
+              className="sr-only"
+            />
+            <div
+              className={`w-9 h-5 rounded-full transition-colors ${
+                showLetAgreed ? 'bg-primary' : 'bg-stone-200'
+              }`}
+            >
+              <div
+                className={`w-4 h-4 bg-white rounded-full mt-0.5 transition-transform ${
+                  showLetAgreed ? 'translate-x-[18px]' : 'translate-x-[2px]'
+                }`}
+              />
+            </div>
+          </label>
+          <span className="text-sm font-roboto font-medium text-[#374151]">
+            Show let or let agreed
+          </span>
+        </div>
+
+        {/* ── Action buttons ── */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-stone-100">
+          <button
+            type="button"
+            onClick={handleClear}
+            className="flex items-center gap-2 h-11 px-4 text-base font-roboto font-medium text-[#374151] border border-[#d1d5db] rounded-lg hover:border-[#9ca3af] transition-colors cursor-pointer whitespace-nowrap"
+          >
+            <span className="w-4 h-4 flex items-center justify-center">
+              <i className="ri-close-circle-line text-sm" />
+            </span>
+            Clear all
+          </button>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(false)}
+            className="flex items-center gap-2 h-11 px-6 bg-primary text-white text-base font-roboto font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer whitespace-nowrap"
+          >
+            <span className="w-4 h-4 flex items-center justify-center">
+              <i className="ri-search-line text-sm" />
+            </span>
+            Apply &amp; Search
+          </button>
+          <span className="text-xs font-roboto text-stone-400 ml-auto">
+            {hasAnyAdvancedFilter ? 'Filters active' : 'No advanced filters applied'}
+          </span>
+        </div>
       </div>
     );
   }
@@ -420,704 +1395,396 @@ export default function OceansPropertySearchBar({
   return (
     <div ref={barRef} className="bg-white border-b border-gray-100">
       {/* ═════════════ DESKTOP (lg+) ═════════════ */}
-      <div className="hidden lg:block px-10 py-3">
-        <div className="flex items-stretch gap-3">
+      <div className="hidden lg:block px-4 md:px-6 lg:px-10 pt-10 pb-5">
+        <div className="flex items-stretch gap-2 max-w-[1400px] mx-auto">
           {/* Address input */}
-          <div className="relative flex items-center gap-2.5 px-4 bg-white border border-[#d1d5db] rounded-[4px] h-12 flex-[1.5] min-w-0">
-            <span className="w-4 h-4 flex items-center justify-center shrink-0">
-              <i className="ri-search-line text-stone-400 text-sm" />
-            </span>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); emitChange({ query: e.target.value }); }}
-              onKeyDown={handleQueryKeyDown}
-              placeholder="Enter an address, town, street, zip or property ID"
-              className="flex-1 min-w-0 text-sm font-roboto font-semibold text-[#374151] placeholder:text-[#9ca3af] focus:outline-none bg-transparent"
-            />
+          <div className="relative flex items-center gap-2 flex-1 min-w-0">
+            <div className="relative flex-1 min-w-0 flex items-center gap-2.5 px-4 h-11 bg-white border border-[#d1d5db] rounded-lg focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+              <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                <i className="ri-map-pin-line text-stone-400 text-base" />
+              </span>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  emitChange({ query: e.target.value });
+                }}
+                onKeyDown={handleQueryKeyDown}
+                placeholder={isRentPage ? "e.g. 'Kololo', 'Muyenga', or '3 bed apartment'" : "e.g. 'Nakasero', 'Bugolobi', or '4 bed villa'"}
+                className="flex-1 min-w-0 text-base font-roboto font-medium text-[#374151] placeholder:text-stone-400 focus:outline-none bg-transparent"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    emitChange({ query: '' });
+                  }}
+                  className="w-4 h-4 flex items-center justify-center shrink-0 cursor-pointer"
+                >
+                  <i className="ri-close-circle-line text-stone-400 text-sm" />
+                </button>
+              )}
+            </div>
             {renderSuggestionsDropdown()}
           </div>
 
-          {/* Status dropdown */}
-          <div className="relative h-12">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setStatusOpen((v) => !v); }}
-              className="h-full flex items-center gap-2 px-4 text-sm font-roboto font-semibold text-[#374151] hover:text-[#111827] transition-colors cursor-pointer whitespace-nowrap bg-white border border-[#d1d5db] rounded-[4px] hover:border-[#9ca3af]"
-            >
-              <span>{status}</span>
-              <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${statusOpen ? 'rotate-180' : ''}`} />
-              </span>
-            </button>
-            <Dropdown open={statusOpen}>
-              {STATUS_OPTIONS.map((o) => (
-                <div
-                  key={o}
-                  className={o === status ? activeOptionClass : optionClass}
-                  onClick={() => { setStatus(o); setStatusOpen(false); emitChange({ status: o }); }}
-                >
-                  {o}
-                </div>
-              ))}
-            </Dropdown>
+          {/* Inline selects */}
+          <div className="hidden md:flex items-center gap-2 mr-4">
+            <InlineSelect
+              id="status"
+              options={STATUS_OPTIONS}
+              value={status}
+              onChange={(v) => {
+                setStatus(v);
+                const newPriceOpts = v === 'For Rent' ? PRICE_OPTIONS_RENT : PRICE_OPTIONS_BUY;
+                const currentStillValid = (newPriceOpts as readonly string[]).includes(priceRange);
+                if (!currentStillValid) {
+                  setPriceRange('Any price');
+                  emitChange({ status: v, priceRange: 'Any price' });
+                } else {
+                  emitChange({ status: v });
+                }
+              }}
+            />
+            <InlineSelect
+              id="radius"
+              options={RADIUS_OPTIONS}
+              value={radius}
+              onChange={(v) => {
+                setRadius(v);
+                emitChange({ radius: v });
+              }}
+            />
+            <InlineSelect
+              id="price"
+              options={priceOptions}
+              value={priceRange}
+              onChange={(v) => {
+                setPriceRange(v);
+                emitChange({ priceRange: v, maxPrice: v === 'Any price' ? 'Max. Price' : v });
+              }}
+            />
+            <InlineSelect
+              id="type"
+              options={TYPE_OPTIONS}
+              value={type}
+              onChange={(v) => {
+                setType(v);
+                emitChange({ type: v });
+              }}
+            />
           </div>
 
-          {/* Type dropdown */}
-          <div className="relative h-12">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setTypeOpen((v) => !v); }}
-              className="h-full flex items-center gap-1.5 px-4 text-sm font-roboto font-semibold text-[#374151] hover:text-[#111827] transition-colors cursor-pointer whitespace-nowrap bg-white border border-[#d1d5db] rounded-[4px] hover:border-[#9ca3af]"
-            >
-              <span>{type === 'Any Type' ? 'Property Type' : type}</span>
-              <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${typeOpen ? 'rotate-180' : ''}`} />
-              </span>
-            </button>
-            <Dropdown open={typeOpen}>
-              {TYPE_OPTIONS.map((o) => (
-                <div
-                  key={o}
-                  className={o === type ? activeOptionClass : optionClass}
-                  onClick={() => { setType(o); setTypeOpen(false); emitChange({ type: o }); }}
-                >
-                  {o}
-                </div>
-              ))}
-            </Dropdown>
-          </div>
-
-          {/* Max Price dropdown */}
-          <div className="relative h-12">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setPriceOpen((v) => !v); }}
-              className="h-full flex items-center gap-2 px-4 text-sm font-roboto font-semibold text-[#374151] hover:text-[#111827] transition-colors cursor-pointer whitespace-nowrap bg-white border border-[#d1d5db] rounded-[4px] hover:border-[#9ca3af]"
-            >
-              <span>{maxPrice}</span>
-              <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${priceOpen ? 'rotate-180' : ''}`} />
-              </span>
-            </button>
-            <Dropdown open={priceOpen}>
-              {MAX_PRICE_OPTIONS.map((o) => (
-                <div
-                  key={o}
-                  className={o === maxPrice ? activeOptionClass : optionClass}
-                  onClick={() => { setMaxPrice(o); setPriceOpen(false); emitChange({ maxPrice: o }); }}
-                >
-                  {o}
-                </div>
-              ))}
-            </Dropdown>
-          </div>
-
+          {/* Filters button */}
           <button
             type="button"
-            onClick={() => setAdvanced((v) => !v)}
-            className={btnClass('secondary', 'px-3')}
+            onClick={() => setFiltersOpen((v) => !v)}
+            className={`hidden md:flex items-center gap-2 h-11 px-4 text-base font-roboto font-semibold border rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              filtersOpen || hasAnyAdvancedFilter
+                ? 'text-primary border-primary bg-primary/5'
+                : 'text-[#374151] border-[#d1d5db] hover:border-primary hover:text-primary'
+            }`}
           >
             <span className="w-4 h-4 flex items-center justify-center">
-              <i className="ri-equalizer-3-line text-sm" />
+              <i className="ri-equalizer-line text-sm" />
             </span>
-            Advanced
+            Advanced Filters{hasAnyAdvancedFilter ? ` (${Object.values(includeExcludeFilters).filter(Boolean).length + advancedPropertyTypes.length + mustHaves.length + propertyFeatures.length + (furnishing !== 'Any' ? 1 : 0) + (availability !== 'Show all' ? 1 : 0) + (addedToSite !== 'Anytime' ? 1 : 0) + (advancedKeywords.trim() ? 1 : 0) + (showLetAgreed ? 1 : 0) + (showSold ? 1 : 0)})` : ''}
           </button>
 
+          {/* Search button */}
           <button
             type="button"
-            onClick={handleSearch}
-            className={btnClass('primary', 'px-5')}
+            onClick={() => handleSearch()}
+            className="hidden md:flex items-center gap-2 h-11 px-5 bg-primary text-white text-base font-roboto font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer whitespace-nowrap disabled:opacity-60"
           >
             <span className="w-4 h-4 flex items-center justify-center">
               <i className="ri-search-line text-sm" />
             </span>
             Search
           </button>
-        </div>
 
-        {advanced && (
-          <div className="mt-0 bg-white border border-[#d1d5db] rounded-b-[4px] overflow-hidden">
-            <div className="px-4 pt-4 pb-3 flex flex-wrap gap-3 items-end">
-
-              <div className="relative flex-1 min-w-[130px]">
-                <button
-                  type="button"
-                  onClick={() => { closeAll(); setLocationOpen((v) => !v); }}
-                  className="w-full flex flex-col items-start gap-0.5 px-4 py-3 rounded-[4px] border border-[#d1d5db] hover:border-[#115e59]/40 bg-white transition-all cursor-pointer text-left"
-                >
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Location</span>
-                  <div className="flex items-center justify-between w-full gap-1 mt-0.5">
-                    <span className="text-sm font-roboto leading-tight truncate text-[#6b7280]">{location}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${locationOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <Dropdown open={locationOpen}>
-                  {LOCATION_OPTIONS.map((o) => (
-                    <div
-                      key={o}
-                      className={o === location ? activeOptionClass : optionClass}
-                      onClick={() => { setLocation(o); setLocationOpen(false); emitChange({ location: o }); }}
-                    >
-                      {o}
-                    </div>
-                  ))}
-                </Dropdown>
-              </div>
-
-              {/* Bedrooms */}
-              <div className="relative flex-1 min-w-[130px]">
-                <button
-                  type="button"
-                  onClick={() => { closeAll(); setBedsOpen((v) => !v); }}
-                  className="w-full flex flex-col items-start gap-0.5 px-4 py-3 rounded-[4px] border border-[#d1d5db] hover:border-[#115e59]/40 bg-white transition-all cursor-pointer text-left"
-                >
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Bedrooms</span>
-                  <div className="flex items-center justify-between w-full gap-1 mt-0.5">
-                    <span className="text-sm font-roboto leading-tight truncate text-[#6b7280]">{beds}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${bedsOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <Dropdown open={bedsOpen}>
-                  {BEDS_OPTIONS.map((o) => (
-                    <div
-                      key={o}
-                      className={o === beds ? activeOptionClass : optionClass}
-                      onClick={() => { setBeds(o); setBedsOpen(false); emitChange({ beds: o }); }}
-                    >
-                      {o}
-                    </div>
-                  ))}
-                </Dropdown>
-              </div>
-
-              {/* Bathrooms */}
-              <div className="relative flex-1 min-w-[130px]">
-                <button
-                  type="button"
-                  onClick={() => { closeAll(); setBathsOpen((v) => !v); }}
-                  className="w-full flex flex-col items-start gap-0.5 px-4 py-3 rounded-[4px] border border-[#d1d5db] hover:border-[#115e59]/40 bg-white transition-all cursor-pointer text-left"
-                >
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Bathrooms</span>
-                  <div className="flex items-center justify-between w-full gap-1 mt-0.5">
-                    <span className="text-sm font-roboto leading-tight truncate text-[#6b7280]">{baths}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${bathsOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <Dropdown open={bathsOpen}>
-                  {BATHS_OPTIONS.map((o) => (
-                    <div
-                      key={o}
-                      className={o === baths ? activeOptionClass : optionClass}
-                      onClick={() => { setBaths(o); setBathsOpen(false); emitChange({ baths: o }); }}
-                    >
-                      {o}
-                    </div>
-                  ))}
-                </Dropdown>
-              </div>
-
-              {/* Price Range */}
-              <div className="relative flex-1 min-w-[130px]">
-                <button
-                  type="button"
-                  onClick={() => { closeAll(); setPriceRangeOpen((v) => !v); }}
-                  className="w-full flex flex-col items-start gap-0.5 px-4 py-3 rounded-[4px] border border-[#d1d5db] hover:border-[#115e59]/40 bg-white transition-all cursor-pointer text-left"
-                >
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Price Range</span>
-                  <div className="flex items-center justify-between w-full gap-1 mt-0.5">
-                    <span className="text-sm font-roboto leading-tight truncate text-[#6b7280]">{priceRange}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${priceRangeOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <Dropdown open={priceRangeOpen}>
-                  {PRICE_RANGE_OPTIONS.map((o) => (
-                    <div
-                      key={o}
-                      className={o === priceRange ? activeOptionClass : optionClass}
-                      onClick={() => { setPriceRange(o); setPriceRangeOpen(false); emitChange({ priceRange: o }); }}
-                    >
-                      {o}
-                    </div>
-                  ))}
-                </Dropdown>
-              </div>
-
-              {/* Clear all — desktop advanced panel */}
-              <button
-                type="button"
-                onClick={handleClear}
-                className={btnClass('utility', 'px-3 h-[66px] shrink-0')}
-              >
-                <span className="w-4 h-4 flex items-center justify-center">
-                  <i className="ri-close-circle-line text-sm" />
-                </span>
-                Clear all
-              </button>
-
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ═════════════ MOBILE ONLY (<md) ═════════════ */}
-      <div className="md:hidden px-3 py-2">
-        {/* Row 1: Location + Filters + Search */}
-        <div className="flex items-stretch gap-1.5">
-          {/* Location input */}
-          <div className="relative flex-1 min-w-0 flex items-center gap-2 px-3 h-11 border border-[#d1d5db] rounded-[4px] bg-white">
-            <span className="w-4 h-4 flex items-center justify-center shrink-0">
-              <i className="ri-map-pin-line text-stone-400 text-sm" />
-            </span>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); emitChange({ query: e.target.value }); }}
-              onKeyDown={handleQueryKeyDown}
-              placeholder="Enter a location"
-              className="flex-1 min-w-0 text-[13px] font-roboto font-semibold text-[#374151] placeholder:text-[#9ca3af] focus:outline-none bg-transparent"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => { setQuery(''); emitChange({ query: '' }); }}
-                className="w-4 h-4 flex items-center justify-center shrink-0 cursor-pointer"
-              >
-                <i className="ri-close-circle-line text-stone-400 text-sm" />
-              </button>
-            )}
-            {renderSuggestionsDropdown()}
-          </div>
-
-          {/* Filters / Advanced button — icon + text */}
+          {/* Save button */}
           <button
             type="button"
-            onClick={() => setAdvanced((v) => !v)}
-            className={`h-11 flex items-center gap-1.5 px-3 rounded-[4px] border transition-colors cursor-pointer shrink-0 ${advanced ? 'bg-[#0d5959] text-white border-[#0d5959]' : 'bg-white text-[#0d5959] border-[#d1d5db] hover:border-[#0d5959]'}`}
+            onClick={handleSaveSearch}
+            className="hidden md:flex items-center gap-2 h-11 px-4 border border-[#d1d5db] text-base font-roboto font-semibold text-[#374151] rounded-lg hover:border-primary hover:text-primary transition-colors cursor-pointer whitespace-nowrap"
+            title="Save this search"
           >
             <span className="w-4 h-4 flex items-center justify-center">
-              <i className="ri-equalizer-3-line text-sm" />
+              <i className="ri-heart-line text-sm" />
             </span>
-            <span className="text-xs font-roboto font-semibold whitespace-nowrap">Filters</span>
+            Save
           </button>
 
-          {/* Search icon */}
+          {/* Mobile-only filter + search buttons */}
           <button
             type="button"
-            onClick={handleSearch}
-            className="h-11 w-11 flex items-center justify-center bg-[#0d5959] text-white rounded-[4px] hover:bg-[#0b4f4f] transition-colors cursor-pointer shrink-0"
+            onClick={() => setFiltersOpen((v) => !v)}
+            className={`md:hidden flex items-center justify-center w-11 h-11 border rounded-lg cursor-pointer transition-colors ${
+              filtersOpen || hasAnyAdvancedFilter
+                ? 'text-primary border-primary bg-primary/5'
+                : 'text-[#374151] border-[#d1d5db] hover:border-primary hover:text-primary'
+            }`}
           >
-            <span className="w-4 h-4 flex items-center justify-center">
-              <i className="ri-search-line text-sm" />
-            </span>
+            <i className="ri-equalizer-line text-lg" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSearch()}
+            className="md:hidden flex items-center justify-center w-11 h-11 bg-primary text-white rounded-lg cursor-pointer disabled:opacity-60 hover:bg-primary/90 transition-colors"
+          >
+            <i className="ri-search-line text-lg" />
           </button>
         </div>
 
-        {/* Row 2: Status + Type + Price — compact label/value buttons (sm only, hidden on xs) */}
-        <div className="hidden sm:flex items-stretch gap-1.5 mt-1.5">
-          {/* Status */}
-          <div className="relative flex-1">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setStatusOpen((v) => !v); }}
-              className="w-full h-11 flex flex-col items-start justify-center px-3 rounded-[4px] border border-[#d1d5db] bg-white hover:border-[#115e59]/40 transition-all cursor-pointer text-left"
-            >
-              <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Sale or Rent</span>
-              <div className="flex items-center justify-between w-full mt-0.5">
-                <span className="text-[13px] font-roboto font-semibold text-[#374151] leading-tight">{status}</span>
-                <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                  <i className={`ri-arrow-down-s-line text-stone-400 text-xs transition-transform duration-200 ${statusOpen ? 'rotate-180' : ''}`} />
-                </span>
-              </div>
-            </button>
-            <MobileDropdown open={statusOpen}>
-              {STATUS_OPTIONS.map((o) => (
-                <div key={o} className={o === status ? activeOptionClass : optionClass} onClick={() => { setStatus(o); setStatusOpen(false); emitChange({ status: o }); }}>{o}</div>
-              ))}
-            </MobileDropdown>
-          </div>
-
-          {/* Type */}
-          <div className="relative flex-1">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setTypeOpen((v) => !v); }}
-              className="w-full h-11 flex flex-col items-start justify-center px-3 rounded-[4px] border border-[#d1d5db] bg-white hover:border-[#115e59]/40 transition-all cursor-pointer text-left"
-            >
-              <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Property type</span>
-              <div className="flex items-center justify-between w-full mt-0.5">
-                <span className="text-[13px] font-roboto font-semibold text-[#374151] leading-tight">{type === 'Any Type' ? 'Show all' : type}</span>
-                <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                  <i className={`ri-arrow-down-s-line text-stone-400 text-xs transition-transform duration-200 ${typeOpen ? 'rotate-180' : ''}`} />
-                </span>
-              </div>
-            </button>
-            <MobileDropdown open={typeOpen}>
-              {TYPE_OPTIONS.map((o) => (
-                <div key={o} className={o === type ? activeOptionClass : optionClass} onClick={() => { setType(o); setTypeOpen(false); emitChange({ type: o }); }}>{o}</div>
-              ))}
-            </MobileDropdown>
-          </div>
-
-          {/* Price */}
-          <div className="relative flex-1">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setPriceOpen((v) => !v); }}
-              className="w-full h-11 flex flex-col items-start justify-center px-3 rounded-[4px] border border-[#d1d5db] bg-white hover:border-[#115e59]/40 transition-all cursor-pointer text-left"
-            >
-              <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Price</span>
-              <div className="flex items-center justify-between w-full mt-0.5">
-                <span className="text-[13px] font-roboto font-semibold text-[#374151] leading-tight">{maxPrice === 'Max. Price' ? 'Any price' : maxPrice}</span>
-                <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                  <i className={`ri-arrow-down-s-line text-stone-400 text-xs transition-transform duration-200 ${priceOpen ? 'rotate-180' : ''}`} />
-                </span>
-              </div>
-            </button>
-            <MobileDropdown open={priceOpen}>
-              {MAX_PRICE_OPTIONS.map((o) => (
-                <div key={o} className={o === maxPrice ? activeOptionClass : optionClass} onClick={() => { setMaxPrice(o); setPriceOpen(false); emitChange({ maxPrice: o }); }}>{o}</div>
-              ))}
-            </MobileDropdown>
-          </div>
-        </div>
-
-        {/* Mobile advanced panel */}
-        {advanced && (
-          <div className="mt-2 space-y-2">
-            {/* xs-only: Status / Type / Price (folded into advanced on very small screens) */}
-            <div className="sm:hidden grid grid-cols-2 gap-2">
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => { closeAll(); setStatusOpen((v) => !v); }}
-                  className="w-full h-11 flex flex-col items-start justify-center px-3 rounded-[4px] border border-[#d1d5db] bg-white hover:border-[#115e59]/40 transition-all cursor-pointer text-left"
-                >
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Sale or Rent</span>
-                  <div className="flex items-center justify-between w-full mt-0.5">
-                    <span className="text-[13px] font-roboto font-semibold text-[#374151] leading-tight">{status}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-xs transition-transform duration-200 ${statusOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <MobileDropdown open={statusOpen}>
-                  {STATUS_OPTIONS.map((o) => (
-                    <div key={o} className={o === status ? activeOptionClass : optionClass} onClick={() => { setStatus(o); setStatusOpen(false); emitChange({ status: o }); }}>{o}</div>
-                  ))}
-                </MobileDropdown>
-              </div>
-
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => { closeAll(); setTypeOpen((v) => !v); }}
-                  className="w-full h-11 flex flex-col items-start justify-center px-3 rounded-[4px] border border-[#d1d5db] bg-white hover:border-[#115e59]/40 transition-all cursor-pointer text-left"
-                >
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Property type</span>
-                  <div className="flex items-center justify-between w-full mt-0.5">
-                    <span className="text-[13px] font-roboto font-semibold text-[#374151] leading-tight">{type === 'Any Type' ? 'Show all' : type}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-xs transition-transform duration-200 ${typeOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <MobileDropdown open={typeOpen}>
-                  {TYPE_OPTIONS.map((o) => (
-                    <div key={o} className={o === type ? activeOptionClass : optionClass} onClick={() => { setType(o); setTypeOpen(false); emitChange({ type: o }); }}>{o}</div>
-                  ))}
-                </MobileDropdown>
-              </div>
-
-              <div className="relative col-span-2">
-                <button
-                  type="button"
-                  onClick={() => { closeAll(); setPriceOpen((v) => !v); }}
-                  className="w-full h-11 flex flex-col items-start justify-center px-3 rounded-[4px] border border-[#d1d5db] bg-white hover:border-[#115e59]/40 transition-all cursor-pointer text-left"
-                >
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Price</span>
-                  <div className="flex items-center justify-between w-full mt-0.5">
-                    <span className="text-[13px] font-roboto font-semibold text-[#374151] leading-tight">{maxPrice === 'Max. Price' ? 'Any price' : maxPrice}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-xs transition-transform duration-200 ${priceOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <MobileDropdown open={priceOpen}>
-                  {MAX_PRICE_OPTIONS.map((o) => (
-                    <div key={o} className={o === maxPrice ? activeOptionClass : optionClass} onClick={() => { setMaxPrice(o); setPriceOpen(false); emitChange({ maxPrice: o }); }}>{o}</div>
-                  ))}
-                </MobileDropdown>
-              </div>
-            </div>
-
-            {/* 2-col grid: Location, Radius, Bedrooms, Bathrooms */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="relative">
-                <button type="button" onClick={() => { closeAll(); setLocationOpen((v) => !v); }} className="w-full flex items-center justify-between px-3 h-[42px] border border-[#d1d5db] rounded-[4px] bg-white text-left cursor-pointer">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Location</span>
-                    <span className="text-[13px] font-roboto text-stone-600 leading-tight mt-0.5">{location}</span>
-                  </div>
-                  <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                    <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${locationOpen ? 'rotate-180' : ''}`} />
-                  </span>
-                </button>
-                <MobileDropdown open={locationOpen}>
-                  {LOCATION_OPTIONS.map((o) => (
-                    <div key={o} className={o === location ? activeOptionClass : optionClass} onClick={() => { setLocation(o); setLocationOpen(false); emitChange({ location: o }); }}>{o}</div>
-                  ))}
-                </MobileDropdown>
-              </div>
-              <div className="relative">
-                <button type="button" onClick={() => { closeAll(); setRadiusOpen((v) => !v); }} className="w-full flex items-center justify-between px-3 h-[42px] border border-[#d1d5db] rounded-[4px] bg-white text-left cursor-pointer">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Radius</span>
-                    <span className="text-[13px] font-roboto text-stone-600 leading-tight mt-0.5">{radius}</span>
-                  </div>
-                  <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                    <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${radiusOpen ? 'rotate-180' : ''}`} />
-                  </span>
-                </button>
-                <MobileDropdown open={radiusOpen}>
-                  {RADIUS_OPTIONS.map((o) => (
-                    <div key={o} className={o === radius ? activeOptionClass : optionClass} onClick={() => { setRadius(o); setRadiusOpen(false); emitChange({ radius: o }); }}>{o}</div>
-                  ))}
-                </MobileDropdown>
-              </div>
-              <div className="relative">
-                <button type="button" onClick={() => { closeAll(); setBedsOpen((v) => !v); }} className="w-full flex items-center justify-between px-3 h-[42px] border border-[#d1d5db] rounded-[4px] bg-white text-left cursor-pointer">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Bedrooms</span>
-                    <span className="text-[13px] font-roboto text-stone-600 leading-tight mt-0.5">{beds}</span>
-                  </div>
-                  <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                    <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${bedsOpen ? 'rotate-180' : ''}`} />
-                  </span>
-                </button>
-                <MobileDropdown open={bedsOpen}>
-                  {BEDS_OPTIONS.map((o) => (
-                    <div key={o} className={o === beds ? activeOptionClass : optionClass} onClick={() => { setBeds(o); setBedsOpen(false); emitChange({ beds: o }); }}>{o}</div>
-                  ))}
-                </MobileDropdown>
-              </div>
-              <div className="relative">
-                <button type="button" onClick={() => { closeAll(); setBathsOpen((v) => !v); }} className="w-full flex items-center justify-between px-3 h-[42px] border border-[#d1d5db] rounded-[4px] bg-white text-left cursor-pointer">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Bathrooms</span>
-                    <span className="text-[13px] font-roboto text-stone-600 leading-tight mt-0.5">{baths}</span>
-                  </div>
-                  <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                    <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${bathsOpen ? 'rotate-180' : ''}`} />
-                  </span>
-                </button>
-                <MobileDropdown open={bathsOpen}>
-                  {BATHS_OPTIONS.map((o) => (
-                    <div key={o} className={o === baths ? activeOptionClass : optionClass} onClick={() => { setBaths(o); setBathsOpen(false); emitChange({ baths: o }); }}>{o}</div>
-                  ))}
-                </MobileDropdown>
-              </div>
-              <div className="relative col-span-2">
-                <button type="button" onClick={() => { closeAll(); setPriceRangeOpen((v) => !v); }} className="w-full flex items-center justify-between px-3 h-[42px] border border-[#d1d5db] rounded-[4px] bg-white text-left cursor-pointer">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Price Range</span>
-                    <span className="text-[13px] font-roboto text-stone-600 leading-tight mt-0.5">{priceRange}</span>
-                  </div>
-                  <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                    <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${priceRangeOpen ? 'rotate-180' : ''}`} />
-                  </span>
-                </button>
-                <MobileDropdown open={priceRangeOpen}>
-                  {PRICE_RANGE_OPTIONS.map((o) => (
-                    <div key={o} className={o === priceRange ? activeOptionClass : optionClass} onClick={() => { setPriceRange(o); setPriceRangeOpen(false); emitChange({ priceRange: o }); }}>{o}</div>
-                  ))}
-                </MobileDropdown>
-              </div>
-            </div>
-
-            {/* Clear button */}
-            <button type="button" onClick={handleClear} className={btnClass('utility', 'w-full justify-center h-[42px]')}>
-              <span className="w-4 h-4 flex items-center justify-center"><i className="ri-close-circle-line text-sm" /></span>
-              Clear Filters
-            </button>
+        {/* ═════════════ Filters Panel (desktop) ═════════════ */}
+        {filtersOpen && (
+          <div ref={filtersPanelRef} className="mt-2 bg-white border border-[#d1d5db] rounded-lg overflow-hidden max-w-[1400px] mx-auto">
+            {renderAdvancedFiltersPanel()}
           </div>
         )}
       </div>
 
       {/* ═════════════ TABLET (md → lg) ═════════════ */}
-      <div className="hidden md:block lg:hidden px-4 py-3">
-        <div className="flex items-stretch gap-2">
-          {/* Address */}
-          <div className="relative flex items-center gap-2 px-3 bg-white border border-[#d1d5db] rounded-[4px] h-11 flex-[2] min-w-0">
-            <span className="w-4 h-4 flex items-center justify-center shrink-0">
-              <i className="ri-search-line text-stone-400 text-sm" />
-            </span>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); emitChange({ query: e.target.value }); }}
-              onKeyDown={handleQueryKeyDown}
-              placeholder="Enter address, town or property ID"
-              className="flex-1 min-w-0 text-sm font-roboto font-semibold text-[#374151] placeholder:text-[#9ca3af] focus:outline-none bg-transparent"
-            />
+      <div className="hidden md:block lg:hidden px-4 md:px-6 py-3">
+        <div className="flex items-stretch gap-2 max-w-[1400px] mx-auto">
+          {/* Address input */}
+          <div className="relative flex items-center gap-2 flex-1 min-w-0">
+            <div className="relative flex-1 min-w-0 flex items-center gap-2.5 px-4 h-11 bg-white border border-[#d1d5db] rounded-lg focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+              <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                <i className="ri-map-pin-line text-stone-400 text-base" />
+              </span>
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  emitChange({ query: e.target.value });
+                }}
+                onKeyDown={handleQueryKeyDown}
+                placeholder="Enter a location"
+                className="flex-1 min-w-0 text-base font-roboto font-medium text-[#374151] placeholder:text-stone-400 focus:outline-none bg-transparent"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    emitChange({ query: '' });
+                  }}
+                  className="w-4 h-4 flex items-center justify-center shrink-0 cursor-pointer"
+                >
+                  <i className="ri-close-circle-line text-stone-400 text-sm" />
+                </button>
+              )}
+            </div>
             {renderSuggestionsDropdown()}
           </div>
 
-          {/* Status */}
-          <div className="relative h-11">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setStatusOpen((v) => !v); }}
-              className="h-full flex items-center gap-1.5 px-3 text-sm font-roboto font-semibold text-[#374151] hover:text-[#111827] transition-colors cursor-pointer whitespace-nowrap bg-white border border-[#d1d5db] rounded-[4px] hover:border-[#9ca3af]"
-            >
-              <span>{status}</span>
-              <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${statusOpen ? 'rotate-180' : ''}`} />
-              </span>
-            </button>
-            <Dropdown open={statusOpen}>
-              {STATUS_OPTIONS.map((o) => (
-                <div key={o} className={o === status ? activeOptionClass : optionClass} onClick={() => { setStatus(o); setStatusOpen(false); emitChange({ status: o }); }}>{o}</div>
-              ))}
-            </Dropdown>
-          </div>
+          <InlineSelect
+            id="status"
+            options={STATUS_OPTIONS}
+            value={status}
+            onChange={(v) => {
+              setStatus(v);
+              const newPriceOpts = v === 'For Rent' ? PRICE_OPTIONS_RENT : PRICE_OPTIONS_BUY;
+              const currentStillValid = (newPriceOpts as readonly string[]).includes(priceRange);
+              if (!currentStillValid) {
+                setPriceRange('Any price');
+                emitChange({ status: v, priceRange: 'Any price' });
+              } else {
+                emitChange({ status: v });
+              }
+            }}
+          />
+          <InlineSelect
+            id="price"
+            options={priceOptions}
+            value={priceRange}
+            onChange={(v) => {
+              setPriceRange(v);
+              emitChange({ priceRange: v, maxPrice: v === 'Any price' ? 'Max. Price' : v });
+            }}
+          />
+          <InlineSelect
+            id="type"
+            options={TYPE_OPTIONS}
+            value={type}
+            onChange={(v) => {
+              setType(v);
+              emitChange({ type: v });
+            }}
+          />
 
-          {/* Type */}
-          <div className="relative h-11">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setTypeOpen((v) => !v); }}
-              className="h-full flex items-center gap-1.5 px-3 text-sm font-roboto font-semibold text-[#374151] hover:text-[#111827] transition-colors cursor-pointer whitespace-nowrap bg-white border border-[#d1d5db] rounded-[4px] hover:border-[#9ca3af]"
-            >
-              <span>{type === 'Any Type' ? 'Property Type' : type}</span>
-              <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${typeOpen ? 'rotate-180' : ''}`} />
-              </span>
-            </button>
-            <Dropdown open={typeOpen}>
-              {TYPE_OPTIONS.map((o) => (
-                <div key={o} className={o === type ? activeOptionClass : optionClass} onClick={() => { setType(o); setTypeOpen(false); emitChange({ type: o }); }}>{o}</div>
-              ))}
-            </Dropdown>
-          </div>
-
-          {/* Max Price */}
-          <div className="relative h-11">
-            <button
-              type="button"
-              onClick={() => { closeAll(); setPriceOpen((v) => !v); }}
-              className="h-full flex items-center gap-1.5 px-3 text-sm font-roboto font-semibold text-[#374151] hover:text-[#111827] transition-colors cursor-pointer whitespace-nowrap bg-white border border-[#d1d5db] rounded-[4px] hover:border-[#9ca3af]"
-            >
-              <span>{maxPrice}</span>
-              <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${priceOpen ? 'rotate-180' : ''}`} />
-              </span>
-            </button>
-            <Dropdown open={priceOpen}>
-              {MAX_PRICE_OPTIONS.map((o) => (
-                <div key={o} className={o === maxPrice ? activeOptionClass : optionClass} onClick={() => { setMaxPrice(o); setPriceOpen(false); emitChange({ maxPrice: o }); }}>{o}</div>
-              ))}
-            </Dropdown>
-          </div>
-
-          {/* Advanced */}
-          <button type="button" onClick={() => setAdvanced((v) => !v)} className={btnClass('secondary', 'px-3 h-11')}>
-            <span className="w-4 h-4 flex items-center justify-center"><i className="ri-equalizer-3-line text-sm" /></span>
-            Advanced
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((v) => !v)}
+            className={`flex items-center gap-2 h-11 px-3 text-base font-roboto font-semibold border rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
+              filtersOpen || hasAnyAdvancedFilter
+                ? 'text-primary border-primary bg-primary/5'
+                : 'text-[#374151] border-[#d1d5db] hover:border-primary hover:text-primary'
+            }`}
+          >
+            <span className="w-4 h-4 flex items-center justify-center">
+              <i className="ri-equalizer-line text-sm" />
+            </span>
+            Advanced Filters
           </button>
-
-          {/* Search */}
-          <button type="button" onClick={handleSearch} className={btnClass('primary', 'px-4 h-11')}>
-            <span className="w-4 h-4 flex items-center justify-center"><i className="ri-search-line text-sm" /></span>
+          <button
+            type="button"
+            onClick={() => handleSearch()}
+            className="flex items-center gap-2 h-11 px-4 bg-primary text-white text-base font-roboto font-semibold rounded-lg hover:bg-primary/90 transition-colors cursor-pointer whitespace-nowrap"
+          >
+            <span className="w-4 h-4 flex items-center justify-center">
+              <i className="ri-search-line text-sm" />
+            </span>
             Search
           </button>
         </div>
 
-        {/* Tablet advanced panel */}
-        {advanced && (
-          <div className="mt-2 bg-white border border-[#d1d5db] rounded-[4px] overflow-hidden">
-            <div className="px-3 pt-3 pb-2 flex flex-wrap gap-2 items-end">
-              <div className="relative flex-1 min-w-[140px]">
-                <button type="button" onClick={() => { closeAll(); setLocationOpen((v) => !v); }} className="w-full flex flex-col items-start gap-0.5 px-3 py-2 rounded-[4px] border border-[#d1d5db] hover:border-[#115e59]/40 bg-white transition-all cursor-pointer text-left">
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Location</span>
-                  <div className="flex items-center justify-between w-full gap-1 mt-0.5">
-                    <span className="text-sm font-roboto leading-tight truncate text-[#6b7280]">{location}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${locationOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <Dropdown open={locationOpen}>
-                  {LOCATION_OPTIONS.map((o) => (
-                    <div key={o} className={o === location ? activeOptionClass : optionClass} onClick={() => { setLocation(o); setLocationOpen(false); emitChange({ location: o }); }}>{o}</div>
-                  ))}
-                </Dropdown>
-              </div>
-              <div className="relative flex-1 min-w-[140px]">
-                <button type="button" onClick={() => { closeAll(); setBedsOpen((v) => !v); }} className="w-full flex flex-col items-start gap-0.5 px-3 py-2 rounded-[4px] border border-[#d1d5db] hover:border-[#115e59]/40 bg-white transition-all cursor-pointer text-left">
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Bedrooms</span>
-                  <div className="flex items-center justify-between w-full gap-1 mt-0.5">
-                    <span className="text-sm font-roboto leading-tight truncate text-[#6b7280]">{beds}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${bedsOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <Dropdown open={bedsOpen}>
-                  {BEDS_OPTIONS.map((o) => (
-                    <div key={o} className={o === beds ? activeOptionClass : optionClass} onClick={() => { setBeds(o); setBedsOpen(false); emitChange({ beds: o }); }}>{o}</div>
-                  ))}
-                </Dropdown>
-              </div>
-              <div className="relative flex-1 min-w-[140px]">
-                <button type="button" onClick={() => { closeAll(); setBathsOpen((v) => !v); }} className="w-full flex flex-col items-start gap-0.5 px-3 py-2 rounded-[4px] border border-[#d1d5db] hover:border-[#115e59]/40 bg-white transition-all cursor-pointer text-left">
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Bathrooms</span>
-                  <div className="flex items-center justify-between w-full gap-1 mt-0.5">
-                    <span className="text-sm font-roboto leading-tight truncate text-[#6b7280]">{baths}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${bathsOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <Dropdown open={bathsOpen}>
-                  {BATHS_OPTIONS.map((o) => (
-                    <div key={o} className={o === baths ? activeOptionClass : optionClass} onClick={() => { setBaths(o); setBathsOpen(false); emitChange({ baths: o }); }}>{o}</div>
-                  ))}
-                </Dropdown>
-              </div>
-              <div className="relative flex-1 min-w-[140px]">
-                <button type="button" onClick={() => { closeAll(); setPriceRangeOpen((v) => !v); }} className="w-full flex flex-col items-start gap-0.5 px-3 py-2 rounded-[4px] border border-[#d1d5db] hover:border-[#115e59]/40 bg-white transition-all cursor-pointer text-left">
-                  <span className="text-[10px] font-roboto font-semibold uppercase tracking-widest text-stone-400 leading-none">Price Range</span>
-                  <div className="flex items-center justify-between w-full gap-1 mt-0.5">
-                    <span className="text-sm font-roboto leading-tight truncate text-[#6b7280]">{priceRange}</span>
-                    <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
-                      <i className={`ri-arrow-down-s-line text-stone-400 text-sm transition-transform duration-200 ${priceRangeOpen ? 'rotate-180' : ''}`} />
-                    </span>
-                  </div>
-                </button>
-                <Dropdown open={priceRangeOpen}>
-                  {PRICE_RANGE_OPTIONS.map((o) => (
-                    <div key={o} className={o === priceRange ? activeOptionClass : optionClass} onClick={() => { setPriceRange(o); setPriceRangeOpen(false); emitChange({ priceRange: o }); }}>{o}</div>
-                  ))}
-                </Dropdown>
-              </div>
-              {/* Clear all — tablet advanced panel */}
-              <button type="button" onClick={handleClear} className={btnClass('utility', 'px-3 h-[58px] shrink-0')}>
-                <span className="w-4 h-4 flex items-center justify-center"><i className="ri-close-circle-line text-sm" /></span>
-                Clear all
-              </button>
-            </div>
+        {/* Tablet filters panel */}
+        {filtersOpen && (
+          <div ref={filtersPanelRef} className="mt-2 bg-white border border-[#d1d5db] rounded-lg overflow-hidden max-w-[1400px] mx-auto">
+            {renderAdvancedFiltersPanel()}
           </div>
         )}
       </div>
+
+      {/* ═════════════ MOBILE (<md) ═════════════ */}
+      <div className="md:hidden px-4 py-3">
+        <div className="flex items-stretch gap-2">
+          {/* Search input */}
+          <div className="relative flex-1 min-w-0 flex items-center gap-2.5 px-4 h-11 bg-white border border-[#d1d5db] rounded-lg focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+            <span className="w-5 h-5 flex items-center justify-center shrink-0">
+              <i className="ri-map-pin-line text-stone-400 text-base" />
+            </span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                emitChange({ query: e.target.value });
+              }}
+              onKeyDown={handleQueryKeyDown}
+              placeholder="Enter a location"
+              className="flex-1 min-w-0 text-base font-roboto font-medium text-[#374151] placeholder:text-stone-400 focus:outline-none bg-transparent"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  emitChange({ query: '' });
+                }}
+                className="w-4 h-4 flex items-center justify-center shrink-0 cursor-pointer"
+              >
+                <i className="ri-close-circle-line text-stone-400 text-sm" />
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((v) => !v)}
+            className={`flex items-center justify-center w-11 h-11 border rounded-lg cursor-pointer transition-colors ${
+              filtersOpen || hasAnyAdvancedFilter
+                ? 'text-primary border-primary bg-primary/5'
+                : 'text-[#374151] border-[#d1d5db] hover:border-primary hover:text-primary'
+            }`}
+          >
+            <i className="ri-equalizer-line text-lg" />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSearch()}
+            className="flex items-center justify-center w-11 h-11 bg-primary text-white rounded-lg cursor-pointer disabled:opacity-60 hover:bg-primary/90 transition-colors"
+          >
+            <i className="ri-search-line text-lg" />
+          </button>
+        </div>
+
+        {renderSuggestionsDropdown()}
+
+        {/* Mobile filters panel */}
+        {filtersOpen && (
+          <div ref={filtersPanelRef} className="mt-2 bg-white border border-[#d1d5db] rounded-lg overflow-hidden max-h-[70vh] overflow-y-auto">
+            {renderMobileAdvancedFiltersPanel()}
+          </div>
+        )}
+      </div>
+
+      {/* ── Save Search Modal ── */}
+      {saveModalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/40" onClick={() => !saveLoading && setSaveModalOpen(false)}>
+          <div
+            className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {saveSuccess ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+                  <i className="ri-check-line text-2xl text-emerald-500" />
+                </div>
+                <h3 className="text-sm font-roboto font-bold text-[#374151] mb-1">Search saved!</h3>
+                <p className="text-xs font-roboto text-stone-400">You can find it in your saved searches.</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-roboto font-bold text-[#374151]">Save this search</h3>
+                  <button
+                    type="button"
+                    onClick={() => setSaveModalOpen(false)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 cursor-pointer transition-colors"
+                  >
+                    <i className="ri-close-line text-stone-400" />
+                  </button>
+                </div>
+
+                <label className="block text-[11px] font-roboto font-semibold uppercase tracking-widest text-stone-400 mb-1.5">
+                  Search name
+                </label>
+                <input
+                  type="text"
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveConfirm(); }}
+                  placeholder="e.g. 3-bed rentals in Kololo"
+                  autoFocus
+                  className="w-full h-11 px-4 text-sm font-roboto font-medium text-[#374151] placeholder:text-stone-400 bg-white border border-[#d1d5db] rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all mb-4"
+                />
+
+                {saveError && (
+                  <p className="text-xs font-roboto text-red-500 mb-3 flex items-center gap-1">
+                    <i className="ri-error-warning-line text-sm" />
+                    {saveError}
+                  </p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSaveModalOpen(false)}
+                    className="flex-1 py-2.5 border border-[#d1d5db] text-[#374151] text-sm font-roboto font-semibold rounded-lg hover:bg-stone-50 cursor-pointer transition-colors whitespace-nowrap"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveConfirm}
+                    disabled={saveLoading || !saveName.trim()}
+                    className="flex-1 py-2.5 bg-primary text-white text-sm font-roboto font-semibold rounded-lg hover:bg-primary/90 disabled:opacity-50 cursor-pointer transition-colors whitespace-nowrap"
+                  >
+                    {saveLoading ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

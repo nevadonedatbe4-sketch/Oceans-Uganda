@@ -5,6 +5,7 @@ import Footer from '@/components/feature/Footer';
 import GlobalContactStrip from '@/components/feature/GlobalContactStrip';
 import InnerContactSection from '@/components/feature/InnerContactSection';
 import { supabase } from '@/lib/supabase';
+import { BlogIndexSEO } from '@/components/feature/PageSEO';
 
 interface BlogPost {
   id: string;
@@ -65,6 +66,7 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <BlogIndexSEO />
       <Navbar />
 
       {/* ── Hero ── */}

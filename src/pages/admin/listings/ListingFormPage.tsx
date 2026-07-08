@@ -70,7 +70,16 @@ function buildPropertyPayload(data: ListingFormData): Record<string, unknown> {
     gym: data.gym ?? false,
     proximity_to_amenities: data.proximity_to_amenities || null,
     unique_features: data.unique_features || null,
+    status: data.status || 'draft',
+    published: data.published ?? false,
   };
+}
+
+/* ── Generate unique draft slug ───────────────────────────────────────── */
+function generateDraftSlug(): string {
+  const ts = Date.now();
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `draft-${ts}-${rand}`;
 }
 
 export default function ListingFormPage() {
@@ -92,6 +101,7 @@ export default function ListingFormPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
+  const [draftError, setDraftError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const hasUnsavedChangesRef = useRef(false);
 
@@ -122,11 +132,15 @@ export default function ListingFormPage() {
 
     const createDraft = async () => {
       setLoading(true);
+      setDraftError(null);
+
+      const draftSlug = generateDraftSlug();
+
       const { data, error } = await supabase
         .from('listings')
         .insert([{
-          title: '',
-          slug: '',
+          title: 'Untitled Draft',
+          slug: draftSlug,
           status: 'draft',
           published: false,
           property_type: 'Apartment',
@@ -142,7 +156,9 @@ export default function ListingFormPage() {
         .maybeSingle();
 
       if (error || !data) {
-        showToast('error', 'Failed to create draft. Please refresh.');
+        const errMsg = error?.message || 'Unknown database error';
+        setDraftError(errMsg);
+        showToast('error', `Failed to create draft: ${errMsg}`);
         setLoading(false);
         return;
       }
@@ -374,11 +390,14 @@ export default function ListingFormPage() {
       const { error } = await supabase.from('listings').update({
         status: 'published',
         published: true,
+        published_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }).eq('id', id);
 
       if (error) throw error;
 
+      // Update local state so the form reflects published status immediately
+      setFormData((prev) => ({ ...prev, status: 'published', published: true }));
       showToast('success', 'Property published successfully');
       setTimeout(() => navigate('/admin/listings', { state: { publishedToast: 'Property published successfully' } }), 1200);
     } catch (err: unknown) {
@@ -405,6 +424,14 @@ export default function ListingFormPage() {
     navigate('/admin/listings');
   };
 
+  /* ── Retry draft creation ───────────────────────────────────────────── */
+  const handleRetryDraft = () => {
+    setDraftError(null);
+    setDraftId(null);
+    // Force re-run the createDraft effect by clearing draftId
+    // The effect depends on [isEdit, draftId], and isEdit is false here
+  };
+
   /* ── Loading states ─────────────────────────────────────────────────── */
   if (loading && !routeId && !draftId) {
     return (
@@ -423,6 +450,36 @@ export default function ListingFormPage() {
         <div className="flex items-center gap-3 text-gray-400">
           <i className="ri-loader-4-line animate-spin text-xl" />
           <span className="text-sm">Loading property…</span>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Draft creation failed ──────────────────────────────────────────── */
+  if (draftError && !draftId) {
+    return (
+      <div className="w-full max-w-xl mx-auto mt-16 px-4">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div className="w-12 h-12 flex items-center justify-center rounded-full bg-red-100 text-red-600 mx-auto mb-4">
+            <i className="ri-error-warning-line text-xl" />
+          </div>
+          <h3 className="text-base font-semibold text-red-800 mb-1">Failed to create draft</h3>
+          <p className="text-sm text-red-600 mb-4">{draftError}</p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={handleRetryDraft}
+              className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <i className="ri-refresh-line mr-1.5" />
+              Try Again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 border border-red-300 text-red-700 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors cursor-pointer whitespace-nowrap"
+            >
+              Refresh Page
+            </button>
+          </div>
         </div>
       </div>
     );

@@ -1,27 +1,32 @@
 User-agent: *
 
-# Private / admin areas — disallow indexing
+# ── Private / admin & auth areas ──────────────────────────
 Disallow: /admin
 Disallow: /admin/
 Disallow: /agent
 Disallow: /agent/
+Disallow: /agent/login
+Disallow: /agent/register
+Disallow: /agent/reset-password
+Disallow: /agent/dashboard
+Disallow: /admin/login
+Disallow: /admin/setup
+Disallow: /admin/reset-password
 
-# Non-indexable public pages (search has noindex meta, but is crawlable)
-Disallow: /valuation
-
-# Public pages — explicitly allowed
+# ── Public content pages ───────────────────────────────────
 Allow: /
 Allow: /buy
 Allow: /rent
 Allow: /all-properties
-Allow: /about
 Allow: /new-developments
+Allow: /about
 Allow: /landlords
 Allow: /contact
 Allow: /search
 Allow: /neighbourhoods
 Allow: /neighbourhood/
 Allow: /property/
+Allow: /blog
 Allow: /blog/
 Allow: /agents/
 

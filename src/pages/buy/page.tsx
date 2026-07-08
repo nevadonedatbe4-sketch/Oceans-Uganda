@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/feature/Navbar';
 import OceansPropertySearchBar, { type SearchBarValue } from '@/components/feature/OceansPropertySearchBar';
 import Footer from '@/components/feature/Footer';
@@ -15,6 +15,7 @@ import Pagination from '@/components/base/Pagination';
 
 import type { ListingFilters } from '@/pages/listings/components/ListingsFilterBar';
 import { BuySEO } from '@/components/feature/PageSEO';
+import { matchesAdvancedFilters, parsePriceRangeLabel } from '@/pages/listings/utils/advancedSearchFilters';
 
 const PRICE_BRACKETS = [
   { label: 'Any Price', min: null, max: null },
@@ -40,10 +41,12 @@ const PER_PAGE_OPTIONS = [9, 18, 36];
 
 function mapListingToProperty(l: SupabaseListing): Property {
   const fallback = 'https://readdy.ai/api/search-image?query=luxury%20residential%20property%20Kampala%20Uganda%20modern%20interior%20elegant%20architecture%20premium%20real%20estate%20photography&width=600&height=400&seq=buy-placeholder&orientation=landscape';
+  const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
+  const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
     id: l.id,
     title: l.title,
-    location: l.neighborhood_name || l.location || 'Kampala',
+    location: fullLocation,
     price: '',
     priceUsd: l.price,
     currency: l.currency || 'USD',
@@ -58,16 +61,9 @@ function mapListingToProperty(l: SupabaseListing): Property {
     images: l.gallery_images && l.gallery_images.length > 0 ? l.gallery_images : undefined,
     listingDate: l.listing_date || '',
     slug: l.slug,
-    description: '',
-  };
-}
-
-function filtersFromSearchBar(value: SearchBarValue): Partial<ListingFilters> {
-  return {
-    search: value.query,
-    type: value.type === 'Any Type' ? '' : value.type,
-    area: value.location === 'Any' ? '' : value.location,
-    beds: value.beds === 'Any' ? '' : value.beds.replace('+', ''),
+    description: l.address || '',
+    furnished: l.furnished,
+    amenities: l.amenities,
   };
 }
 
@@ -75,7 +71,7 @@ function searchBarFromFilters(filters: ListingFilters): SearchBarValue {
   return {
     query: filters.search,
     status: 'For Sale',
-    type: filters.type || 'Any Type',
+    type: filters.type || 'Any type',
     maxPrice: 'Max. Price',
     location: filters.area || 'Any',
     beds: filters.beds ? `${filters.beds}+` : 'Any',
@@ -128,6 +124,7 @@ export default function BuyPage() {
   const { listings: supabaseListings, loading, error } = useListings('sale');
   const { neighborhoods } = useNeighborhoods();
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Filters state — seeded from URL params
   const [filters, setFilters] = useState<ListingFilters>(() => {
@@ -180,7 +177,9 @@ export default function BuyPage() {
     return [];
   }, [supabaseListings, loading]);
 
-  const bracket = PRICE_BRACKETS.find((b) => b.label === filters.priceBracket) || PRICE_BRACKETS[0];
+  const bracket =
+    PRICE_BRACKETS.find((b) => b.label === filters.priceBracket) ||
+    parsePriceRangeLabel(filters.priceBracket);
   const currentCurrency = (filters as Record<string, unknown>).currency as string ?? '';
 
   const filteredAndSorted = useMemo(() => {
@@ -192,38 +191,34 @@ export default function BuyPage() {
         if (p.beds < min) return false;
       }
       if (bracket.min !== null || bracket.max !== null) {
-        const price = parseFloat(p.price.replace(/[^0-9.]/g, ''));
-        if (!isNaN(price)) {
+        const price = p.priceUsd;
+        if (price != null) {
           if (bracket.min !== null && price < bracket.min) return false;
           if (bracket.max !== null && price > bracket.max) return false;
         }
       }
-      if (currentCurrency && p.price) {
-        const priceLower = p.price.toLowerCase();
-        if (currentCurrency === 'UGX' && !priceLower.includes('ugx') && !priceLower.includes('ush')) return false;
-        if (currentCurrency === 'USD' && !priceLower.includes('$') && !priceLower.includes('usd')) return false;
-        if (currentCurrency === 'EUR' && !priceLower.includes('€') && !priceLower.includes('eur')) return false;
-        if (currentCurrency === 'GBP' && !priceLower.includes('£') && !priceLower.includes('gbp')) return false;
-        if (currentCurrency === 'KES' && !priceLower.includes('ksh') && !priceLower.includes('kes')) return false;
-      }
+      if (currentCurrency && (p.currency || 'USD') !== currentCurrency) return false;
       if (filters.search.trim()) {
         const q = filters.search.toLowerCase();
-        if (!p.title.toLowerCase().includes(q) && !p.location.toLowerCase().includes(q)) return false;
+        if (
+          !p.title.toLowerCase().includes(q) &&
+          !p.location.toLowerCase().includes(q) &&
+          !p.type.toLowerCase().includes(q) &&
+          !(p.description || '').toLowerCase().includes(q)
+        )
+          return false;
       }
+      if (!matchesAdvancedFilters(p, searchBarValue)) return false;
       return true;
     });
 
     if (sortBy === 'price_asc')
-      list = [...list].sort(
-        (a, b) => parseFloat(a.price.replace(/[^0-9.]/g, '')) - parseFloat(b.price.replace(/[^0-9.]/g, ''))
-      );
+      list = [...list].sort((a, b) => (a.priceUsd ?? 0) - (b.priceUsd ?? 0));
     else if (sortBy === 'price_desc')
-      list = [...list].sort(
-        (a, b) => parseFloat(b.price.replace(/[^0-9.]/g, '')) - parseFloat(a.price.replace(/[^0-9.]/g, ''))
-      );
+      list = [...list].sort((a, b) => (b.priceUsd ?? 0) - (a.priceUsd ?? 0));
 
     return list;
-  }, [sourceListings, filters, sortBy, bracket, currentCurrency]);
+  }, [sourceListings, filters, sortBy, bracket, currentCurrency, searchBarValue]);
 
   // Reset to page 1 whenever filters or sort change
   useEffect(() => {
@@ -251,9 +246,37 @@ export default function BuyPage() {
   // When search bar changes, map back to page filters immediately (real-time)
   const handleSearchBarChange = useCallback((value: SearchBarValue) => {
     setSearchBarValue(value);
-    const nextFilters = { ...filters, ...filtersFromSearchBar(value) };
-    setFilters(nextFilters);
-  }, [filters]);
+    setFilters((prev) => {
+      const updates: Partial<ListingFilters> = {};
+      // Always apply search query
+      updates.search = value.query;
+      // Only override type if it's a real selection (not default)
+      if (value.type !== 'Any type') updates.type = value.type;
+      // Only override area if it's a real selection
+      if (value.location !== 'Any') updates.area = value.location;
+      // Only override beds if it's a real selection
+      if (value.beds !== 'Any beds' && value.beds !== 'Any') updates.beds = value.beds.replace('+', '');
+      // Map price dropdown to priceBracket — only if non-default
+      if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
+        updates.priceBracket = value.priceRange;
+      }
+      return { ...prev, ...updates };
+    });
+  }, []);
+
+  // Handle the Search button — navigate to /search page with live Supabase data
+  const handleSearch = useCallback((value: SearchBarValue) => {
+    const params = new URLSearchParams();
+    params.set('purpose', 'sale');
+    if (value.query.trim()) params.set('q', value.query.trim());
+    if (value.type !== 'Any type') params.set('type', value.type);
+    if (value.location !== 'Any') params.set('area', value.location);
+    if (value.beds !== 'Any beds' && value.beds !== 'Any') params.set('beds', value.beds.replace('+', ''));
+    if (value.priceRange && value.priceRange !== 'Any price' && value.priceRange !== 'Any') {
+      params.set('priceRange', value.priceRange);
+    }
+    navigate(`/search?${params.toString()}`);
+  }, [navigate]);
 
   // When sidebar widgets change, sync back to search bar
   const updateFilters = useCallback((partial: Partial<ListingFilters>) => {
@@ -275,6 +298,7 @@ export default function BuyPage() {
         controlled
         value={searchBarValue}
         onChange={handleSearchBarChange}
+        onSearch={handleSearch}
       />
 
       {/* Page title + breadcrumb */}

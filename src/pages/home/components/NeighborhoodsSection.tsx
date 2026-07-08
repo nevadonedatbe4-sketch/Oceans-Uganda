@@ -297,36 +297,23 @@ function MobileNbCard({ name, image, slug, overlayOpacity, className = '', style
   );
 }
 
-// ── MOBILE MOSAIC GRID: 2-col masonry with 10 items ──
+// ── MOBILE EQUAL GRID: all cards same size, uniform 2-col ──
 function MobileMosaicGrid({ items, gapPx, overlayOpacity }: { items: { id: number; name: string; image: string; count: number; slug: string }[]; gapPx: number; overlayOpacity: number }) {
-  const tileHeight = 118;
-  const tallHeight = tileHeight * 2 + gapPx;
-
-  // masonry pattern: tall, short, short, tall, short, short, tall, short, short, short
-  const spans = [2, 1, 1, 2, 1, 1, 2, 1, 1, 1];
-
   return (
     <div
       className="grid grid-cols-2 md:hidden"
-      style={{
-        gap: `${gapPx}px`,
-        gridAutoFlow: 'dense',
-      }}
+      style={{ gap: `${gapPx}px` }}
     >
-      {items.slice(0, 10).map((nb, i) => {
-        const isTall = spans[i] === 2;
-        return (
-          <MobileNbCard
-            key={nb.id}
-            name={nb.name}
-            image={nb.image}
-            slug={nb.slug || nb.name.toLowerCase().replace(/\s+/g, '-')}
-            overlayOpacity={overlayOpacity}
-            className={isTall ? 'row-span-2' : ''}
-            style={{ height: isTall ? `${tallHeight}px` : `${tileHeight}px` }}
-          />
-        );
-      })}
+      {items.map((nb) => (
+        <MobileNbCard
+          key={nb.id}
+          name={nb.name}
+          image={nb.image}
+          slug={nb.slug || nb.name.toLowerCase().replace(/\s+/g, '-')}
+          overlayOpacity={overlayOpacity}
+          style={{ height: '160px' }}
+        />
+      ))}
     </div>
   );
 }

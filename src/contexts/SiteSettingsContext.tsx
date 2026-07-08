@@ -98,7 +98,7 @@ const DEFAULTS: SiteSettings = {
   logo_dashboard: '',
   logo_transparent: '',
   favicon_url: '',
-  logo_height_standard: '40',
+  logo_height_standard: '72',
   logo_width_standard: '160',
   company_name: 'Oceans Uganda',
   phone: '+256(0)758671270',
