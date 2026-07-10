@@ -36,6 +36,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Properties', icon: 'ri-building-2-line', path: '/admin/listings' },
       { label: 'Add Property', icon: 'ri-add-circle-line', path: '/admin/listings/new' },
+      { label: 'JV Desk', icon: 'ri-landscape-line', path: '/admin/jv-desk' },
       { label: 'Favorites', icon: 'ri-heart-3-line', path: '/admin/favorites' },
     ],
   },

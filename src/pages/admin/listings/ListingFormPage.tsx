@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import {
   ListingFormData, ListingImage, AgentOption, NeighborhoodOption,
@@ -70,6 +70,8 @@ function buildPropertyPayload(data: ListingFormData): Record<string, unknown> {
     gym: data.gym ?? false,
     proximity_to_amenities: data.proximity_to_amenities || null,
     unique_features: data.unique_features || null,
+    tenure: data.tenure || null,
+    jv_structure: data.jv_structure || null,
     status: data.status || 'draft',
     published: data.published ?? false,
   };
@@ -85,6 +87,9 @@ function generateDraftSlug(): string {
 export default function ListingFormPage() {
   const { id: routeId } = useParams<{ id?: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const presetPropertyType = searchParams.get('type');
+  const presetPurpose = searchParams.get('purpose');
 
   /* ── Mode detection ────────────────────────────────────────────────────
      isEdit = user opened an EXISTING listing via /admin/listings/:id
@@ -143,8 +148,8 @@ export default function ListingFormPage() {
           slug: draftSlug,
           status: 'draft',
           published: false,
-          property_type: 'Apartment',
-          purpose: 'sale',
+          property_type: presetPropertyType || 'Apartment',
+          purpose: presetPurpose || 'sale',
           bedrooms: 0,
           bathrooms: 0,
           parking: 0,
@@ -170,7 +175,7 @@ export default function ListingFormPage() {
     };
 
     createDraft();
-  }, [isEdit, draftId]);
+  }, [isEdit, draftId, presetPropertyType, presetPurpose]);
 
   /* ── Load existing data (edit OR resume draft) ──────────────────────── */
   useEffect(() => {
@@ -260,6 +265,8 @@ export default function ListingFormPage() {
         gym: l.gym ?? false,
         proximity_to_amenities: l.proximity_to_amenities ?? '',
         unique_features: l.unique_features ?? '',
+        tenure: l.tenure ?? '',
+        jv_structure: l.jv_structure ?? '',
       });
       setLoading(false);
     };

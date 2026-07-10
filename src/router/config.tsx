@@ -15,6 +15,7 @@ import ProtectedRoute from '@/pages/admin/components/ProtectedRoute';
 import AdminDashboard from '@/pages/admin/dashboard/page';
 import AdminListings from '@/pages/admin/listings/page';
 import ListingFormPage from '@/pages/admin/listings/ListingFormPage';
+import AdminJVDesk from '@/pages/admin/jv-desk/page';
 import AdminNeighborhoods from '@/pages/admin/neighborhoods/page';
 import NeighborhoodFormPage from '@/pages/admin/neighborhoods/NeighborhoodFormPage';
 import AdminAgents from '@/pages/admin/agents/page';
@@ -230,6 +231,10 @@ const routes: RouteObject[] = [
       {
         path: 'listings/:id',
         element: <ListingFormPage />,
+      },
+      {
+        path: 'jv-desk',
+        element: <AdminJVDesk />,
       },
       {
         path: 'neighborhoods',

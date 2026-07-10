@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ListingFormData, CURRENCIES, PRICE_FREQUENCIES } from '@/pages/admin/listings/types';
+import { ListingFormData, CURRENCIES, PRICE_FREQUENCIES, TENURE_OPTIONS } from '@/pages/admin/listings/types';
 
 interface Props {
   data: ListingFormData;
@@ -447,6 +447,36 @@ export default function StepPriceDetails({ data, onChange }: Props) {
           </div>
         </div>
       </section>
+
+      {/* Land & Joint Venture */}
+      {(data.property_type === 'Land' || data.purpose === 'joint_venture') && (
+        <section className="pb-2">
+          <SectionTitle icon="ri-landscape-line" title="Land &amp; Joint Venture" subtitle="Tenure status and JV deal terms shown on the public listing" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Tenure" hint="Land title status">
+              <select
+                value={data.tenure}
+                onChange={(e) => onChange('tenure', e.target.value)}
+                className={selectClass}
+              >
+                <option value="">Select tenure</option>
+                {TENURE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </Field>
+            {data.purpose === 'joint_venture' && (
+              <Field label="JV Structure" hint="e.g. Revenue share, Equity split, Lease-to-JV">
+                <input
+                  type="text"
+                  value={data.jv_structure}
+                  onChange={(e) => onChange('jv_structure', e.target.value)}
+                  placeholder="Describe the JV deal structure"
+                  className={inputClass}
+                />
+              </Field>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Furnishing */}
       <section className="pb-2">

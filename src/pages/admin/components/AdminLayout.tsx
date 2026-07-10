@@ -8,6 +8,7 @@ const pageTitles: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
   '/admin/listings': 'Properties',
   '/admin/listings/new': 'Add Property',
+  '/admin/jv-desk': 'JV Desk',
   '/admin/neighborhoods': 'Neighborhoods',
   '/admin/agents': 'Agents',
   '/admin/leads': 'Leads',

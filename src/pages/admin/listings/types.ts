@@ -19,6 +19,8 @@ export interface Listing {
   bathrooms: number;
   parking: number;
   size_sqm: number | null;
+  land_area: number | null;
+  land_area_postfix: string | null;
   furnished: boolean;
   featured: boolean;
   listing_status: string[];
@@ -33,6 +35,8 @@ export interface Listing {
   listing_date: string | null;
   seo_title: string | null;
   seo_description: string | null;
+  tenure: string | null;
+  jv_structure: string | null;
   created_at: string;
   updated_at: string | null;
 }
@@ -130,6 +134,8 @@ export interface ListingFormData {
   gym: boolean;
   proximity_to_amenities: string;
   unique_features: string;
+  tenure: string;
+  jv_structure: string;
 }
 
 export const PROPERTY_TYPES = ['Apartment', 'Villa', 'Penthouse', 'Townhouse', 'Office', 'Studio', 'Land', 'Commercial', 'Semi-Detached', 'Single Family Home'];
@@ -173,6 +179,7 @@ export const LISTING_STATUS_OPTIONS = [
   { value: 'for_sale', label: 'For Sale' },
   { value: 'for_rent', label: 'For Rent' },
 ];
+export const TENURE_OPTIONS = ['Freehold', 'Mailo', 'Customary', 'Leasehold'];
 
 export const INIT_FORM: ListingFormData = {
   title: '', slug: '', property_type: 'Apartment', purpose: 'sale',
@@ -200,6 +207,8 @@ export const INIT_FORM: ListingFormData = {
   gym: false,
   proximity_to_amenities: '',
   unique_features: '',
+  tenure: '',
+  jv_structure: '',
 };
 
 export function generateSlug(title: string): string {
@@ -229,6 +238,7 @@ export function purposeColor(purpose: string): string {
     case 'rent': return 'bg-teal-50 text-teal-700';
     case 'short_stay': return 'bg-orange-50 text-orange-700';
     case 'new_dev': return 'bg-violet-50 text-violet-700';
+    case 'joint_venture': return 'bg-amber-50 text-amber-700';
     default: return 'bg-gray-100 text-gray-500';
   }
 }
