@@ -233,6 +233,8 @@ export function useAllListings() {
   return { listings, loading, error };
 }
 
+export const JV_PURPOSE = 'joint_venture';
+
 export interface LandListing {
   id: string;
   title: string;
@@ -242,12 +244,12 @@ export interface LandListing {
   price: number | null;
   currency: string;
   price_note: string | null;
+  purpose: string;
   land_area: number | null;
   land_area_postfix: string | null;
   size_sqm: number | null;
   cover_image: string | null;
   short_description: string | null;
-  is_jv: boolean;
   jv_structure: string | null;
   tenure: string | null;
   featured: boolean;
@@ -268,7 +270,7 @@ export function useLandListings() {
 
       const { data, error: fetchError } = await supabase
         .from('listings')
-        .select('id, title, slug, location, city, price, currency, price_note, land_area, land_area_postfix, size_sqm, cover_image, short_description, is_jv, jv_structure, tenure, featured, listing_date')
+        .select('id, title, slug, location, city, price, currency, price_note, purpose, land_area, land_area_postfix, size_sqm, cover_image, short_description, jv_structure, tenure, featured, listing_date')
         .eq('property_type', 'Land')
         .eq('status', 'published')
         .order('featured', { ascending: false })

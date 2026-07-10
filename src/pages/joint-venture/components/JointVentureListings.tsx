@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useLandListings, type LandListing } from '@/hooks/useListings';
+import { useLandListings, JV_PURPOSE, type LandListing } from '@/hooks/useListings';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 type FilterType = 'all' | 'sale' | 'jv';
@@ -21,12 +21,16 @@ function locationLabel(l: LandListing): string {
   return [l.location, l.city].filter(Boolean).join(', ') || '—';
 }
 
+function isJV(l: LandListing): boolean {
+  return l.purpose === JV_PURPOSE;
+}
+
 export default function JointVentureListings() {
   const [filter, setFilter] = useState<FilterType>('all');
   const { listings, loading, error } = useLandListings();
   const { formatPrice } = useCurrency();
 
-  const visible = filter === 'all' ? listings : listings.filter((l) => (filter === 'jv' ? l.is_jv : !l.is_jv));
+  const visible = filter === 'all' ? listings : listings.filter((l) => (filter === 'jv' ? isJV(l) : !isJV(l)));
 
   return (
     <section className="bg-off-white py-20 px-6">
@@ -74,10 +78,10 @@ export default function JointVentureListings() {
                 <div>
                   <span
                     className={`inline-block mt-2.5 px-2.5 py-1 rounded-sm text-[11px] font-roboto font-semibold uppercase tracking-widest ${
-                      l.is_jv ? 'bg-golden/15 text-golden-dark' : 'bg-accent/10 text-accent'
+                      isJV(l) ? 'bg-golden/15 text-golden-dark' : 'bg-accent/10 text-accent'
                     }`}
                   >
-                    {l.is_jv ? 'JV Opportunity' : 'For Sale'}
+                    {isJV(l) ? 'JV Opportunity' : 'For Sale'}
                   </span>
                 </div>
                 <h4 className="font-prata text-xl text-primary mt-3.5">{l.title}</h4>
@@ -95,7 +99,7 @@ export default function JointVentureListings() {
                   <div>
                     <span className="block text-[11px] text-text-gray uppercase tracking-wide font-roboto">Ask</span>
                     <span className="block font-roboto text-primary text-sm mt-0.5">
-                      {l.is_jv ? l.jv_structure || 'JV structure' : formatPrice(l.price, l.currency, { note: l.price_note, purpose: 'sale' })}
+                      {isJV(l) ? l.jv_structure || 'JV structure' : formatPrice(l.price, l.currency, { note: l.price_note, purpose: 'sale' })}
                     </span>
                   </div>
                 </div>

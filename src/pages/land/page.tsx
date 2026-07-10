@@ -6,6 +6,7 @@ import GlobalContactStrip from '@/components/feature/GlobalContactStrip';
 import LogoLoading from '@/components/base/LogoLoading';
 import { supabase } from '@/lib/supabase';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { JV_PURPOSE } from '@/hooks/useListings';
 import { LandDetailSEO } from '@/components/feature/PageSEO';
 
 interface LandDetail {
@@ -18,13 +19,13 @@ interface LandDetail {
   price: number | null;
   currency: string;
   price_note: string | null;
+  purpose: string;
   land_area: number | null;
   land_area_postfix: string | null;
   size_sqm: number | null;
   cover_image: string | null;
   short_description: string | null;
   full_description: string | null;
-  is_jv: boolean;
   jv_structure: string | null;
   tenure: string | null;
   featured: boolean;
@@ -54,7 +55,7 @@ export default function LandDetailPage() {
 
       const { data: l } = await supabase
         .from('listings')
-        .select('id, title, slug, location, city, country, price, currency, price_note, land_area, land_area_postfix, size_sqm, cover_image, short_description, full_description, is_jv, jv_structure, tenure, featured')
+        .select('id, title, slug, location, city, country, price, currency, price_note, purpose, land_area, land_area_postfix, size_sqm, cover_image, short_description, full_description, jv_structure, tenure, featured')
         .eq('slug', slug)
         .eq('property_type', 'Land')
         .eq('status', 'published')
@@ -98,7 +99,7 @@ export default function LandDetailPage() {
       source_page: `Land Detail — ${listing.title}`,
       message: form.message || null,
       stage: 'new',
-      inquiry_type: listing.is_jv ? 'joint_venture_investor' : 'land_enquiry',
+      inquiry_type: listing.purpose === JV_PURPOSE ? 'joint_venture_investor' : 'land_enquiry',
       property_title: listing.title,
     });
 
@@ -137,16 +138,21 @@ export default function LandDetailPage() {
       ? `${listing.size_sqm.toLocaleString()} sqm`
       : '—';
 
-  const askDisplay = listing.is_jv
+  const listingIsJV = listing.purpose === JV_PURPOSE;
+
+  const askDisplay = listingIsJV
     ? listing.jv_structure || 'Joint venture'
     : formatPrice(listing.price, listing.currency, { note: listing.price_note, purpose: 'sale' });
 
   const fullLocation = [listing.location, listing.city, listing.country].filter(Boolean).join(', ');
 
   return (
-    <div className="min-h-screen bg-off-white pt-[88px] md:pt-[96px]">
+    <div className="min-h-screen bg-off-white">
       <LandDetailSEO listing={listing} location={fullLocation} image={images[0]} askDisplay={askDisplay} />
       <Navbar />
+
+      {/* Page wrapper — push content down past the fixed navbar */}
+      <div className="pt-[88px] md:pt-[96px]">
 
       {/* Breadcrumb */}
       <div className="max-w-6xl mx-auto px-6 pt-6 text-xs font-roboto text-text-gray">
@@ -161,10 +167,10 @@ export default function LandDetailPage() {
           <img src={images[0]} alt={listing.title} className="w-full h-[320px] md:h-[440px] object-cover" />
           <span
             className={`absolute top-4 left-4 px-3 py-1.5 rounded-sm text-[11px] font-roboto font-semibold uppercase tracking-widest ${
-              listing.is_jv ? 'bg-golden text-primary' : 'bg-accent text-white'
+              listingIsJV ? 'bg-golden text-primary' : 'bg-accent text-white'
             }`}
           >
-            {listing.is_jv ? 'JV Opportunity' : 'For Sale'}
+            {listingIsJV ? 'JV Opportunity' : 'For Sale'}
           </span>
         </div>
         {images.length > 1 && (
@@ -229,7 +235,7 @@ export default function LandDetailPage() {
         {/* Enquiry panel */}
         <div className="lg:sticky lg:top-[110px] bg-primary p-7">
           <h3 className="font-prata text-xl text-white mb-2">
-            {listing.is_jv ? 'Enquire About This JV' : 'Enquire About This Plot'}
+            {listingIsJV ? 'Enquire About This JV' : 'Enquire About This Plot'}
           </h3>
           <p className="text-white/60 font-roboto text-xs mb-5 leading-relaxed">
             A member of the Oceans Uganda land team will respond within 48 hours.
@@ -274,6 +280,8 @@ export default function LandDetailPage() {
             </form>
           )}
         </div>
+      </div>
+
       </div>
 
       <GlobalContactStrip />

@@ -138,6 +138,7 @@ export const PURPOSES = [
   { value: 'rent', label: 'For Rent' },
   { value: 'short_stay', label: 'Short Stay' },
   { value: 'new_dev', label: 'New Development' },
+  { value: 'joint_venture', label: 'Joint Venture' },
 ];
 export const STATUSES = [
   { value: 'draft', label: 'Draft' },

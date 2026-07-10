@@ -513,19 +513,20 @@ export function PropertyDetailSEO({ title, description, price, type, purpose, be
 
 /* ─────────────── Land Detail Page SEO ─────────────── */
 interface LandDetailSEOProps {
-  listing: { title: string; slug: string; short_description: string | null; full_description: string | null; is_jv: boolean };
+  listing: { title: string; slug: string; short_description: string | null; full_description: string | null; purpose: string };
   location: string;
   image: string;
   askDisplay: string;
 }
 
 export function LandDetailSEO({ listing, location, image, askDisplay }: LandDetailSEOProps) {
-  const description = listing.short_description || listing.full_description || `${listing.title} — ${listing.is_jv ? 'joint venture land opportunity' : 'land for sale'} in ${location}. ${askDisplay}.`;
+  const isJV = listing.purpose === 'joint_venture';
+  const description = listing.short_description || listing.full_description || `${listing.title} — ${isJV ? 'joint venture land opportunity' : 'land for sale'} in ${location}. ${askDisplay}.`;
 
   useSEO({
     title: `${listing.title} | Oceans Uganda`,
     description: description.slice(0, 155),
-    keywords: `${listing.is_jv ? 'joint venture land' : 'land for sale'} ${location}, Uganda land investment`,
+    keywords: `${isJV ? 'joint venture land' : 'land for sale'} ${location}, Uganda land investment`,
     canonical: `/land/${listing.slug}`,
     ogType: 'article',
     ogTitle: `${listing.title} | Oceans Uganda`,
@@ -544,10 +545,10 @@ export function LandDetailSEO({ listing, location, image, askDisplay }: LandDeta
       image: image ? [image] : undefined,
       url: pageUrl,
       address: { '@type': 'PostalAddress', addressLocality: location, addressCountry: 'UG' },
-      additionalProperty: [{ '@type': 'PropertyValue', name: 'Listing Type', value: listing.is_jv ? 'Joint Venture' : 'For Sale' }],
+      additionalProperty: [{ '@type': 'PropertyValue', name: 'Listing Type', value: isJV ? 'Joint Venture' : 'For Sale' }],
     };
     return injectSchemaLD('schema-land-detail', schema);
-  }, [listing.title, listing.slug, listing.is_jv, description, image, location]);
+  }, [listing.title, listing.slug, isJV, description, image, location]);
 
   return null;
 }
