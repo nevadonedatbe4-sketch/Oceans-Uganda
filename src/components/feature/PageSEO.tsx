@@ -511,6 +511,47 @@ export function PropertyDetailSEO({ title, description, price, type, purpose, be
   return null;
 }
 
+/* ─────────────── Land Detail Page SEO ─────────────── */
+interface LandDetailSEOProps {
+  listing: { title: string; slug: string; short_description: string | null; full_description: string | null; is_jv: boolean };
+  location: string;
+  image: string;
+  askDisplay: string;
+}
+
+export function LandDetailSEO({ listing, location, image, askDisplay }: LandDetailSEOProps) {
+  const description = listing.short_description || listing.full_description || `${listing.title} — ${listing.is_jv ? 'joint venture land opportunity' : 'land for sale'} in ${location}. ${askDisplay}.`;
+
+  useSEO({
+    title: `${listing.title} | Oceans Uganda`,
+    description: description.slice(0, 155),
+    keywords: `${listing.is_jv ? 'joint venture land' : 'land for sale'} ${location}, Uganda land investment`,
+    canonical: `/land/${listing.slug}`,
+    ogType: 'article',
+    ogTitle: `${listing.title} | Oceans Uganda`,
+    ogDescription: description.slice(0, 155),
+    ogImage: image,
+  });
+
+  useEffect(() => {
+    const pageUrl = `${SITE_URL}/land/${listing.slug}`;
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'RealEstateListing',
+      '@id': `${pageUrl}#listing`,
+      name: listing.title,
+      description,
+      image: image ? [image] : undefined,
+      url: pageUrl,
+      address: { '@type': 'PostalAddress', addressLocality: location, addressCountry: 'UG' },
+      additionalProperty: [{ '@type': 'PropertyValue', name: 'Listing Type', value: listing.is_jv ? 'Joint Venture' : 'For Sale' }],
+    };
+    return injectSchemaLD('schema-land-detail', schema);
+  }, [listing.title, listing.slug, listing.is_jv, description, image, location]);
+
+  return null;
+}
+
 /* ─────────────── Neighbourhood Page SEO ─────────────── */
 export function NeighbourhoodSEO({ name, count }: { name: string; count: number; slug: string }) {
   const nbSlug = name.toLowerCase().replace(/\s+/g, '-');

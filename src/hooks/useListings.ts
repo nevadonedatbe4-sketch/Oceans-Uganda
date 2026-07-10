@@ -233,6 +233,67 @@ export function useAllListings() {
   return { listings, loading, error };
 }
 
+export interface LandListing {
+  id: string;
+  title: string;
+  slug: string;
+  location: string | null;
+  city: string | null;
+  price: number | null;
+  currency: string;
+  price_note: string | null;
+  land_area: number | null;
+  land_area_postfix: string | null;
+  size_sqm: number | null;
+  cover_image: string | null;
+  short_description: string | null;
+  is_jv: boolean;
+  jv_structure: string | null;
+  tenure: string | null;
+  featured: boolean;
+  listing_date: string | null;
+}
+
+export function useLandListings() {
+  const [listings, setListings] = useState<LandListing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+
+      const { data, error: fetchError } = await supabase
+        .from('listings')
+        .select('id, title, slug, location, city, price, currency, price_note, land_area, land_area_postfix, size_sqm, cover_image, short_description, is_jv, jv_structure, tenure, featured, listing_date')
+        .eq('property_type', 'Land')
+        .eq('status', 'published')
+        .order('featured', { ascending: false })
+        .order('listing_date', { ascending: false });
+
+      if (cancelled) return;
+
+      if (fetchError) {
+        // eslint-disable-next-line no-console
+        console.error('useLandListings fetch error:', fetchError);
+        setError(fetchError.message);
+        setListings([]);
+      } else {
+        setListings((data || []) as LandListing[]);
+      }
+      setLoading(false);
+    };
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, []);
+
+  return { listings, loading, error };
+}
+
 export function useNeighborhoods() {
   const [neighborhoods, setNeighborhoods] = useState<NeighborhoodOption[]>([]);
 

@@ -4,6 +4,7 @@ import GlobalContactStrip from '@/components/feature/GlobalContactStrip';
 import { JointVentureSEO } from '@/components/feature/PageSEO';
 import JointVentureForm from './components/JointVentureForm';
 import JointVentureFAQ from './components/JointVentureFAQ';
+import JointVentureListings from './components/JointVentureListings';
 
 const PROJECT_TYPES = ['Apartment blocks', 'Gated communities', 'Hotels & resorts', 'Commercial complexes', 'Agri-processing sites'];
 
@@ -153,6 +154,9 @@ export default function JointVenturePage() {
           </div>
         </div>
       </section>
+
+      {/* Land on the desk today */}
+      <JointVentureListings />
 
       {/* Services */}
       <section className="bg-secondary py-20 px-6">
