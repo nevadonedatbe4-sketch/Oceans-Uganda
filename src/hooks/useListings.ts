@@ -250,6 +250,7 @@ export interface LandListing {
   size_sqm: number | null;
   cover_image: string | null;
   short_description: string | null;
+  full_description: string | null;
   jv_structure: string | null;
   tenure: string | null;
   featured: boolean;
@@ -270,7 +271,7 @@ export function useLandListings() {
 
       const { data, error: fetchError } = await supabase
         .from('listings')
-        .select('id, title, slug, location, city, price, currency, price_note, purpose, land_area, land_area_postfix, size_sqm, cover_image, short_description, jv_structure, tenure, featured, listing_date')
+        .select('id, title, slug, location, city, price, currency, price_note, purpose, land_area, land_area_postfix, size_sqm, cover_image, short_description, full_description, jv_structure, tenure, featured, listing_date')
         .eq('property_type', 'Land')
         .eq('status', 'published')
         .order('featured', { ascending: false })

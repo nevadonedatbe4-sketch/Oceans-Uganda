@@ -177,9 +177,9 @@ function LogoFileUploader({
     const ext = file.name.split('.').pop();
     const slug = label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const path = `logos/${slug}_${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('media').upload(path, file, { upsert: true });
+    const { error: upErr } = await supabase.storage.from('property-images').upload(path, file, { upsert: true });
     if (upErr) { setUploadErr(upErr.message); setUploading(false); return; }
-    const { data } = supabase.storage.from('media').getPublicUrl(path);
+    const { data } = supabase.storage.from('property-images').getPublicUrl(path);
     onChange(data.publicUrl);
     setUploading(false);
   };
