@@ -12,7 +12,7 @@ interface SEOMeta {
   noIndex?: boolean;
 }
 
-const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://example.com';
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://oceans.co.ug';
 
 export function useSEO(meta: SEOMeta) {
   useEffect(() => {

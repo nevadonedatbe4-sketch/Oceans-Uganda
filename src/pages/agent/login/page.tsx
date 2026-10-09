@@ -2,6 +2,7 @@ import { useState, type FormEvent, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { SITE_URL } from '@/hooks/useSEO';
 
 type View = 'login' | 'forgot' | 'forgot-sent';
 
@@ -46,7 +47,7 @@ export default function AgentLogin() {
     e.preventDefault();
     setResetError(null);
     setResetSubmitting(true);
-    const redirectTo = `${window.location.origin}/agent/reset-password`;
+    const redirectTo = `${SITE_URL}/agent/reset-password`;
     const { error: err } = await supabase.auth.resetPasswordForEmail(resetEmail, { redirectTo });
     setResetSubmitting(false);
     if (err) {
