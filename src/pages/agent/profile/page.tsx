@@ -103,9 +103,9 @@ export default function AgentProfile() {
     setUploading(true);
     const ext = file.name.split('.').pop();
     const path = `profiles/agent_${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('media').upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from('property-images').upload(path, file, { upsert: true });
     if (!error) {
-      const { data } = supabase.storage.from('media').getPublicUrl(path);
+      const { data } = supabase.storage.from('property-images').getPublicUrl(path);
       set('photo', data.publicUrl);
     }
     setUploading(false);

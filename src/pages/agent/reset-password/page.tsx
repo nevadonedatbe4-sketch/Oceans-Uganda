@@ -1,6 +1,7 @@
 import { useState, type FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useRecoverySession } from '@/hooks/useRecoverySession';
 
 type Stage = 'form' | 'success' | 'invalid';
 
@@ -14,19 +15,10 @@ export default function AgentResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const recovery = useRecoverySession();
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setStage('form');
-      }
-    });
-
-    const hash = window.location.hash;
-    if (!hash || (!hash.includes('access_token') && !hash.includes('type=recovery'))) {
-      const timer = setTimeout(() => setStage('invalid'), 800);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+    if (recovery === 'invalid') setStage((s) => (s === 'success' ? s : 'invalid'));
+  }, [recovery]);
 
   const getStrength = (pw: string): { label: string; color: string; width: string } => {
     if (pw.length === 0) return { label: '', color: '', width: 'w-0' };

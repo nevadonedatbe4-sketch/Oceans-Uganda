@@ -1,6 +1,7 @@
 import { useState, type FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useRecoverySession } from '@/hooks/useRecoverySession';
 
 type Stage = 'form' | 'success' | 'invalid';
 
@@ -14,21 +15,11 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Supabase puts the recovery token in the URL hash — it auto-handles the session
+  // Supabase turns the recovery link into a session — show the form only if we have one
+  const recovery = useRecoverySession();
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setStage('form');
-      }
-    });
-
-    // If no hash token present at all, show invalid state after a short delay
-    const hash = window.location.hash;
-    if (!hash || (!hash.includes('access_token') && !hash.includes('type=recovery'))) {
-      const timer = setTimeout(() => setStage('invalid'), 800);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+    if (recovery === 'invalid') setStage((s) => (s === 'success' ? s : 'invalid'));
+  }, [recovery]);
 
   const getStrength = (pw: string): { label: string; color: string; width: string } => {
     if (pw.length === 0) return { label: '', color: '', width: 'w-0' };

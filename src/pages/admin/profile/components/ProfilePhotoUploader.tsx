@@ -20,9 +20,9 @@ export default function AdminProfilePhotoUploader({ currentPhoto, name, onUpload
     setUploading(true);
     const ext = file.name.split('.').pop();
     const path = `profiles/admin_${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('media').upload(path, file, { upsert: true });
+    const { error: upErr } = await supabase.storage.from('property-images').upload(path, file, { upsert: true });
     if (upErr) { setError(upErr.message); setUploading(false); return; }
-    const { data } = supabase.storage.from('media').getPublicUrl(path);
+    const { data } = supabase.storage.from('property-images').getPublicUrl(path);
     onUploaded(data.publicUrl);
     setUploading(false);
   };
