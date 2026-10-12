@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 interface NavItem {
   label: string;
@@ -90,7 +91,7 @@ const MANAGEMENT_SUB_ITEMS = [
   { path: '/admin/management/cache', label: 'Save / Sync / Cache', icon: 'ri-database-2-line' },
 ];
 
-const FALLBACK_LOGO = 'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png';
+const FALLBACK_LOGO = BRAND_LOGO_URL;
 
 function SidebarContent({
   collapsed,
@@ -109,7 +110,7 @@ function SidebarContent({
 
   const menuBg = get('dash_menu_bg', '#1B4332');
   const activeColor = get('dash_active_border_color', '#0d5959');
-  const logoSrc = get('logo_dashboard') || get('logo_main') || FALLBACK_LOGO;
+  const logoSrc = get('logo_main') || FALLBACK_LOGO;
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + '/');

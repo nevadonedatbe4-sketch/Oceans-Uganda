@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { SITE_URL } from '@/hooks/useSEO';
 import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 type View = 'login' | 'forgot' | 'forgot-sent';
 
@@ -81,9 +82,9 @@ export default function AdminLogin() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#002349]/90 to-[#002349]/70" />
         <div className="relative z-10 flex flex-col justify-center p-12 text-white">
           <img
-            src="https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png"
+            src={BRAND_LOGO_URL}
             alt="Oceans Uganda"
-            className="rounded-lg mb-6 h-12 w-auto object-contain brightness-0 invert"
+            className="rounded-lg mb-6 h-12 w-auto object-contain"
           />
           <h1 className="text-3xl font-jost font-bold mb-2">
             Oceans Admin
@@ -100,7 +101,7 @@ export default function AdminLogin() {
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 text-center">
             <img
-              src="https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png"
+              src={BRAND_LOGO_URL}
               alt="Oceans Uganda"
               className="h-10 w-auto object-contain rounded-lg mx-auto"
             />

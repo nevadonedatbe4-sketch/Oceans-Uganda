@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AgentSidebar from './AgentSidebar';
 import AgentBottomNav from './AgentBottomNav';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 export default function AgentLayout() {
   const { session, profile, loading } = useAuth();
@@ -64,7 +65,7 @@ export default function AgentLayout() {
             <i className={`text-xl transition-all duration-200 ${mobileOpen ? 'ri-close-line' : 'ri-menu-line'}`} />
           </button>
           <img
-            src="https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png"
+            src={BRAND_LOGO_URL}
             alt="Oceans"
             className="h-5 w-auto object-contain"
           />

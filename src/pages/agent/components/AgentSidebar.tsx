@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 interface NavItem {
   icon: string;
@@ -24,13 +25,13 @@ interface Props {
   onClose?: () => void;
 }
 
-const FALLBACK_LOGO = 'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png';
+const FALLBACK_LOGO = BRAND_LOGO_URL;
 
 export default function AgentSidebar({ onClose }: Props) {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { get } = useSiteSettings();
-  const logoSrc = get('logo_dashboard') || get('logo_main') || FALLBACK_LOGO;
+  const logoSrc = get('logo_main') || FALLBACK_LOGO;
 
   const handleSignOut = async () => {
     await signOut();

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 type Step = 1 | 2 | 3;
 
@@ -105,9 +106,9 @@ export default function AgentRegister() {
         <div className="relative z-10 flex flex-col justify-center p-12 text-white">
           <Link to="/">
             <img
-              src="https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png"
+              src={BRAND_LOGO_URL}
               alt="Oceans Uganda"
-              className="rounded-lg mb-6 h-12 w-auto object-contain brightness-0 invert"
+              className="rounded-lg mb-6 h-12 w-auto object-contain"
             />
           </Link>
           <h1 className="text-3xl font-jost font-bold mb-2">
@@ -143,7 +144,7 @@ export default function AgentRegister() {
           {/* Mobile logo */}
           <div className="md:hidden mb-8 text-center">
             <img
-              src="https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png"
+              src={BRAND_LOGO_URL}
               alt="Oceans Uganda"
               className="rounded-lg mx-auto h-10 w-auto object-contain"
             />

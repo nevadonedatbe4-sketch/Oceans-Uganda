@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useRecoverySession } from '@/hooks/useRecoverySession';
 import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 type Stage = 'form' | 'success' | 'invalid';
 
@@ -77,9 +78,9 @@ export default function ResetPasswordPage() {
 
         <div className="relative z-10 px-12 pt-14">
           <img
-            src="https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png"
+            src={BRAND_LOGO_URL}
             alt="Oceans Uganda"
-            className="h-12 w-auto object-contain brightness-0 invert"
+            className="h-12 w-auto object-contain"
           />
         </div>
 
@@ -129,7 +130,7 @@ export default function ResetPasswordPage() {
           {/* Mobile logo */}
           <div className="lg:hidden mb-10 flex justify-center">
             <img
-              src="https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png"
+              src={BRAND_LOGO_URL}
               alt="Oceans Uganda"
               className="h-10 w-auto object-contain"
             />

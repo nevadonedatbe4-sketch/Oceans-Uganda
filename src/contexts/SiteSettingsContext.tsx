@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface SiteSettings {
@@ -94,7 +95,7 @@ const DEFAULTS: SiteSettings = {
   // legacy
   brand_primary_color: '#001731',
   brand_accent_color: '#D4A614',
-  logo_main: 'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png',
+  logo_main: BRAND_LOGO_URL,
   logo_dashboard: '',
   logo_transparent: '',
   favicon_url: '',
@@ -287,10 +288,50 @@ function injectCSSVars(s: SiteSettings) {
   }
 }
 
+// ─── Settings cache ───────────────────────────────────────────────────────────
+// Settings come from the database after the first render. Without a cache every
+// visit would paint the built-in defaults (old logo, colours, phone, fonts…) and
+// then jump to the saved values. We keep the last-loaded copy in localStorage and
+// apply it before the first paint, then refresh it in the background.
+const CACHE_KEY = 'oceans_site_settings_v1';
+const FIRST_VISIT_MAX_WAIT_MS = 3000;
+
+function readCache(): SiteSettings | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? { ...DEFAULTS, ...(JSON.parse(raw) as Partial<SiteSettings>) } : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(map: SiteSettings) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(map));
+  } catch {
+    // storage full or unavailable — caching is best-effort
+  }
+}
+
+// Shown only on a visitor's very first load, while there is nothing cached yet.
+function SettingsSplash() {
+  return (
+    <div style={{ minHeight: '100vh', background: '#001731', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <img src={BRAND_LOGO_URL} alt="Oceans Uganda" style={{ height: 64, width: 'auto', opacity: 0.9 }} />
+    </div>
+  );
+}
+
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export function SiteSettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<SiteSettings>(DEFAULTS);
-  const [loading, setLoading] = useState(true);
+  const [cached] = useState<SiteSettings | null>(() => {
+    const c = readCache();
+    if (c) injectCSSVars(c); // apply saved colours/fonts before the first paint
+    return c;
+  });
+  const [settings, setSettings] = useState<SiteSettings>(cached ?? DEFAULTS);
+  const [loading, setLoading] = useState(!cached);
+  const [ready, setReady] = useState(!!cached);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -305,6 +346,7 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
         });
         setSettings(map);
         injectCSSVars(map);
+        writeCache(map);
       } else {
         injectCSSVars(DEFAULTS);
       }
@@ -312,12 +354,16 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
       injectCSSVars(DEFAULTS);
     }
     setLoading(false);
+    setReady(true);
   }, []);
 
   useEffect(() => {
+    // never leave a first-time visitor on the splash if the request is slow
+    const timer = setTimeout(() => setReady(true), FIRST_VISIT_MAX_WAIT_MS);
     load();
     // Register this instance's reload so management saves can trigger it
     registerGlobalSettingsReload(load);
+    return () => clearTimeout(timer);
   }, [load]);
 
   const get = useCallback(
@@ -328,7 +374,7 @@ export function SiteSettingsProvider({ children }: { children: ReactNode }) {
 
   return (
     <SiteSettingsContext.Provider value={{ settings, loading, get, reload: load }}>
-      {children}
+      {ready ? children : <SettingsSplash />}
     </SiteSettingsContext.Provider>
   );
 }

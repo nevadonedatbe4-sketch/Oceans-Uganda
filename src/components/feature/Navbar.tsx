@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import CurrencySwitcher from '@/components/base/CurrencySwitcher';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 const navLinks = [
   { label: 'Buy', href: '/buy' },
@@ -15,7 +16,7 @@ const navLinks = [
   { label: 'Contact', href: '/contact' },
 ];
 
-const FALLBACK_LOGO = 'https://iisgbnbwbmxrdvhmolee.supabase.co/storage/v1/object/public/property-images/logos/main-logo_1784019185390.png';
+const FALLBACK_LOGO = BRAND_LOGO_URL;
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);

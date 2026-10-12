@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 const importantLinks = [
   { label: 'Buy Property', href: '/buy' },
@@ -21,7 +22,6 @@ const SOCIAL_ICONS: { key: string; icon: string; label: string; fallback: string
   { key: 'whatsapp_direct_url', icon: 'ri-whatsapp-fill', label: 'WhatsApp', fallback: 'https://wa.link/ksz8s8', color: 'bg-[#25D366]' },
 ];
 
-const FOOTER_LOGO = 'https://iisgbnbwbmxrdvhmolee.supabase.co/storage/v1/object/public/property-images/logos/main-logo_1784019185390.png';
 
 export default function Footer() {
   const { get } = useSiteSettings();
@@ -143,7 +143,7 @@ export default function Footer() {
       <div className="border-t border-white/10 py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col items-center gap-4">
           <img
-            src={FOOTER_LOGO}
+            src={BRAND_LOGO_URL}
             alt={companyName}
             className="h-16 w-auto object-contain opacity-90"
           />

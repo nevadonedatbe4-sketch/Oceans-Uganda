@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BRAND_LOGO_URL } from '@/components/base/brand';
 
 const EDGE_FN = 'https://iisgbnbwbmxrdvhmolee.supabase.co/functions/v1/create-admin-user';
 
@@ -54,7 +55,7 @@ export default function AdminSetup() {
     <div className="min-h-screen flex items-center justify-center bg-[#f7f5f0]">
       <div className="bg-white rounded-xl border border-[#e8e2d9] px-10 py-12 w-full max-w-sm text-center">
         <img
-          src="https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png"
+          src={BRAND_LOGO_URL}
           alt="Oceans Uganda"
           className="h-10 w-auto object-contain mx-auto mb-8"
         />
