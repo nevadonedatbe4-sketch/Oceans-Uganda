@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import SaveBar from '../components/SaveBar';
 import SectionHeader from '../components/SectionHeader';
 import SettingField from '../components/SettingField';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 interface ComponentSetting {
   id: string;
@@ -156,7 +157,7 @@ function PropertyCardPanel({ settings, onChange }: { settings: Record<string, un
         >
           <div className="relative overflow-hidden" style={{ height: `${num('image_height', 210)}px` }}>
             <img
-              src="https://readdy.ai/api/search-image?query=modern%20luxury%20apartment%20interior%20living%20room%20elegant%20minimal%20design%20bright%20natural%20light%20Kampala%20Uganda&width=520&height=320&seq=comp-card-preview&orientation=landscape"
+              src={PLACEHOLDER_IMAGE}
               alt="preview"
               className="w-full h-full object-cover object-top"
             />

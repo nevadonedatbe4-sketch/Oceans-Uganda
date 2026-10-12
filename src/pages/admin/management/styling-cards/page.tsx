@@ -2,6 +2,7 @@ import { useManagementSettings } from '../hooks/useManagementSettings';
 import SettingField from '../components/SettingField';
 import SaveBar from '../components/SaveBar';
 import SectionHeader from '../components/SectionHeader';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 export default function StylingCardsPage() {
   const { get, update, save, saving, dirty, saveStatus, reset, loading } = useManagementSettings('styling_cards');
@@ -35,7 +36,7 @@ export default function StylingCardsPage() {
           }}
         >
           <div style={{ height: '160px', background: '#e7e5e4', position: 'relative', overflow: 'hidden' }}>
-            <img src="https://readdy.ai/api/search-image?query=modern%20luxury%20apartment%20interior%20living%20room%20elegant%20minimal%20design&width=560&height=320&seq=card-preview-1&orientation=landscape" alt="preview" className="w-full h-full object-cover" />
+            <img src={PLACEHOLDER_IMAGE} alt="preview" className="w-full h-full object-cover" />
             <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
               <span style={{ background: get('badge_sale_color', '#1B4332'), color: get('badge_text_color', '#ffffff'), fontSize: '10px', fontWeight: 700, padding: '3px 8px', borderRadius: '3px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>For Sale</span>
             </div>

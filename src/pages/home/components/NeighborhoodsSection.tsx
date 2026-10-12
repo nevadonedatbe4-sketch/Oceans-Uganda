@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 interface DbNeighborhood {
   id: string;
@@ -399,20 +400,20 @@ export default function NeighborhoodsSection() {
       });
 
       const FALLBACK_IMGS: Record<string, string> = {
-        'kololo': 'https://readdy.ai/api/search-image?query=Kololo%20Kampala%20Uganda%20dramatic%20aerial%20skyline%20panorama%20hilltop%20neighbourhood%20elevated%20city%20view%20dense%20tropical%20canopy%20luxury%20rooftops%20emerging%20above%20lush%20green%20trees%20golden%20hour%20light%20sweeping%20urban%20landscape%20photography&width=600&height=800&seq=nb_kololo_sky&orientation=portrait',
-        'nakasero': 'https://readdy.ai/api/search-image?query=Nakasero%20Hill%20Kampala%20Uganda%20city%20skyline%20aerial%20view%20central%20business%20district%20modern%20office%20towers%20mixed%20high%20rise%20buildings%20dense%20urban%20core%20sunset%20warm%20amber%20glow%20panoramic%20cityscape&width=600&height=400&seq=nb_nakasero_sky&orientation=landscape',
-        'muyenga': 'https://readdy.ai/api/search-image?query=Muyenga%20Kampala%20Uganda%20scenic%20hilltop%20skyline%20panorama%20Lake%20Victoria%20shimmering%20water%20visible%20in%20background%20lush%20green%20valley%20luxury%20rooftops%20tropical%20trees%20golden%20dusk%20light%20dramatic%20wide%20angle&width=600&height=800&seq=nb_muyenga_sky&orientation=portrait',
-        'bugolobi': 'https://readdy.ai/api/search-image?query=Bugolobi%20Kampala%20Uganda%20modern%20urban%20skyline%20aerial%20view%20contemporary%20apartment%20blocks%20mixed%20residential%20commercial%20buildings%20wide%20organized%20streets%20tropical%20tree%20lined%20avenues%20bright%20daytime&width=600&height=400&seq=nb_bugolobi_sky&orientation=landscape',
-        'naguru': 'https://readdy.ai/api/search-image?query=Naguru%20Kampala%20Uganda%20hilltop%20panoramic%20skyline%20aerial%20sweeping%20view%20over%20Kampala%20city%20rolling%20green%20hills%20dense%20tropical%20vegetation%20luxury%20villas%20rooftops%20peaking%20through%20canopy%20dramatic%20sky&width=600&height=800&seq=nb_naguru_sky&orientation=portrait',
-        'ntinda': 'https://readdy.ai/api/search-image?query=Ntinda%20Kampala%20Uganda%20vibrant%20suburban%20skyline%20aerial%20view%20busy%20commercial%20residential%20neighbourhood%20mix%20of%20modern%20and%20traditional%20buildings%20wide%20roads%20tropical%20trees%20overhead%20drone%20photography&width=600&height=400&seq=nb_ntinda_sky&orientation=landscape',
-        'munyonyo': 'https://readdy.ai/api/search-image?query=Munyonyo%20Kampala%20Uganda%20lakeside%20skyline%20aerial%20view%20Lake%20Victoria%20shoreline%20premium%20residential%20area%20lush%20green%20slopes%20luxury%20homes%20descending%20toward%20shimmering%20lake%20water%20dramatic%20aerial%20landscape&width=600&height=800&seq=nb_munyonyo_sky&orientation=portrait',
-        'mbuya': 'https://readdy.ai/api/search-image?query=Mbuya%20Kampala%20Uganda%20lakeside%20skyline%20aerial%20view%20Lake%20Victoria%20shoreline%20premium%20residential%20area%20lush%20green%20slopes%20luxury%20homes%20descending%20toward%20shimmering%20lake%20water%20dramatic%20aerial%20landscape&width=600&height=400&seq=nb_mbuya_sky&orientation=landscape',
-        'lubowa': 'https://readdy.ai/api/search-image?query=Lubowa%20Kampala%20Uganda%20upscale%20gated%20suburb%20aerial%20skyline%20view%20new%20development%20wide%20pristine%20boulevards%20modern%20luxury%20villa%20rooftops%20manicured%20gardens%20lush%20tropical%20greenery%20serene%20affluent%20community&width=600&height=800&seq=nb_lubowa_sky&orientation=portrait',
+        'kololo': PLACEHOLDER_IMAGE,
+        'nakasero': PLACEHOLDER_IMAGE,
+        'muyenga': PLACEHOLDER_IMAGE,
+        'bugolobi': PLACEHOLDER_IMAGE,
+        'naguru': PLACEHOLDER_IMAGE,
+        'ntinda': PLACEHOLDER_IMAGE,
+        'munyonyo': PLACEHOLDER_IMAGE,
+        'mbuya': PLACEHOLDER_IMAGE,
+        'lubowa': PLACEHOLDER_IMAGE,
       };
 
       const items: NbItem[] = (nbData as DbNeighborhood[]).map((nb) => {
         const slugKey = nb.slug?.toLowerCase() || nb.name.toLowerCase();
-        const fallbackImg = FALLBACK_IMGS[slugKey] || FALLBACK_IMGS[Object.keys(FALLBACK_IMGS).find(k => slugKey.includes(k)) || ''] || 'https://readdy.ai/api/search-image?query=Kampala%20Uganda%20luxury%20residential%20neighbourhood%20aerial%20tropical%20greenery%20premium%20homes%20scenic%20wide%20roads%20sunny%20day&width=600&height=400&seq=nb-generic&orientation=landscape';
+        const fallbackImg = FALLBACK_IMGS[slugKey] || FALLBACK_IMGS[Object.keys(FALLBACK_IMGS).find(k => slugKey.includes(k)) || ''] || PLACEHOLDER_IMAGE;
         return {
           id: nb.id,
           name: nb.name,

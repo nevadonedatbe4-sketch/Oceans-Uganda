@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { SITE_URL } from '@/hooks/useSEO';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 type View = 'login' | 'forgot' | 'forgot-sent';
 
@@ -74,7 +75,7 @@ export default function AdminLogin() {
       <div
         className="hidden md:flex md:w-1/2 bg-cover bg-center relative"
         style={{
-          backgroundImage: 'url(https://readdy.ai/api/search-image?query=luxury%20residential%20estate%20Kampala%20Uganda%20panoramic%20aerial%20view%20at%20golden%20hour%20modern%20villas%20green%20gardens%20warm%20amber%20tones%20refined%20architecture%20cinematic%20photography&width=720&height=1080&seq=adminloginbg01&orientation=portrait)',
+          backgroundImage: `url(${PLACEHOLDER_HERO})`,
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-[#002349]/90 to-[#002349]/70" />

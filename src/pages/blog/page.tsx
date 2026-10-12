@@ -6,6 +6,7 @@ import GlobalContactStrip from '@/components/feature/GlobalContactStrip';
 import InnerContactSection from '@/components/feature/InnerContactSection';
 import { supabase } from '@/lib/supabase';
 import { BlogIndexSEO } from '@/components/feature/PageSEO';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 interface BlogPost {
   id: string;
@@ -73,7 +74,7 @@ export default function BlogPage() {
       <div
         className="relative pt-32 pb-20 px-6 text-center overflow-hidden"
         style={{
-          backgroundImage: 'url(https://readdy.ai/api/search-image?query=Kampala%20Uganda%20aerial%20panoramic%20cityscape%20dramatic%20golden%20hour%20light%20rolling%20green%20hills%20dense%20tropical%20canopy%20luxury%20rooftops%20emerging%20above%20trees%20sweeping%20urban%20landscape%20wide%20angle%20photography&width=1920&height=600&seq=blog_index_hero&orientation=landscape)',
+          backgroundImage: `url(${PLACEHOLDER_HERO})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

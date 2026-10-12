@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import PropertyCard from '@/components/base/PropertyCard';
 import type { Property } from '@/types/property';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 interface Props {
   get: (key: string, fallback?: string) => string;
@@ -21,7 +22,7 @@ const MOCK_PROPERTIES: Property[] = [
     baths: 2,
     parking: 2,
     sqft: 2200,
-    image: 'https://readdy.ai/api/search-image?query=modern%20luxury%20apartment%20interior%20living%20room%20elegant%20minimal%20design%20bright%20natural%20light%20high%20ceiling%20Kampala%20Uganda&width=800&height=520&seq=live-preview-prop-1&orientation=landscape',
+    image: PLACEHOLDER_IMAGE,
     featured: true,
     listingDate: new Date(Date.now() - 3 * 86400000).toISOString(),
     slug: 'luxury-3-bed-kololo',
@@ -40,7 +41,7 @@ const MOCK_PROPERTIES: Property[] = [
     baths: 4,
     parking: 3,
     sqft: 4800,
-    image: 'https://readdy.ai/api/search-image?query=contemporary%20villa%20swimming%20pool%20garden%20tropical%20lush%20greenery%20modern%20architecture%20exterior%20Uganda%20Africa&width=800&height=520&seq=live-preview-prop-2&orientation=landscape',
+    image: PLACEHOLDER_IMAGE,
     featured: false,
     listingDate: new Date(Date.now() - 12 * 86400000).toISOString(),
     slug: 'contemporary-villa-naguru',
@@ -59,7 +60,7 @@ const MOCK_PROPERTIES: Property[] = [
     baths: 1,
     parking: 1,
     sqft: 480,
-    image: 'https://readdy.ai/api/search-image?query=modern%20studio%20apartment%20interior%20compact%20minimalist%20design%20clean%20white%20walls%20natural%20light%20urban%20Kampala&width=800&height=520&seq=live-preview-prop-3&orientation=landscape',
+    image: PLACEHOLDER_IMAGE,
     featured: false,
     listingDate: new Date(Date.now() - 45 * 86400000).toISOString(),
     slug: 'studio-bugolobi',

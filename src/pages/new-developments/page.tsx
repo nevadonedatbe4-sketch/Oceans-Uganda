@@ -10,8 +10,9 @@ import PropertyCard from '@/components/base/PropertyCard';
 import type { Property } from '@/types/property';
 import { NewDevelopmentsSEO } from '@/components/feature/PageSEO';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { PLACEHOLDER_IMAGE, PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
-const DEFAULT_HERO_IMAGE = 'https://readdy.ai/api/search-image?query=modern%20luxury%20residential%20development%20construction%20site%20Kampala%20Uganda%20contemporary%20architecture%20crane%20building%20progress%20premium%20real%20estate%20investment%20blue%20sky%20professional%20photography%20high%20contrast&width=1920&height=700&seq=dev-hero1&orientation=landscape';
+const DEFAULT_HERO_IMAGE = PLACEHOLDER_HERO;
 
 const PRICE_BRACKETS = [
   { label: 'Any Price', min: null, max: null },
@@ -42,7 +43,7 @@ function mapListingToProperty(l: SupabaseListing): Property {
     type: l.property_type?.toUpperCase() || 'PROPERTY',
     category: 'sale',
     badge: 'New Development',
-    image: l.cover_image || 'https://readdy.ai/api/search-image?query=modern%20new%20development%20property%20Kampala%20Uganda%20luxury%20residential%20building%20contemporary%20architecture%20premium%20real%20estate%20photography&width=600&height=400&seq=dev-placeholder&orientation=landscape',
+    image: l.cover_image || PLACEHOLDER_IMAGE,
     listingDate: l.listing_date || l.created_at?.split('T')[0] || '',
     slug: l.slug,
     description: l.address || '',

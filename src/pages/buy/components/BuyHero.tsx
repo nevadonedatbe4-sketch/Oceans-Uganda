@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import ListingsHero from '@/pages/listings/components/ListingsHero';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
-const DEFAULT_BG = 'https://readdy.ai/api/search-image?query=luxury%20residential%20property%20Kampala%20Uganda%20modern%20villa%20exterior%20lush%20tropical%20garden%20colonial%20architecture%20warm%20golden%20hour%20light%20premium%20real%20estate%20photography%20wide%20angle&width=1920&height=600&seq=buy-hero-bg&orientation=landscape';
+const DEFAULT_BG = PLACEHOLDER_HERO;
 
 interface HeroSettings {
   eyebrow: string;

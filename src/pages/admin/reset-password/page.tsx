@@ -2,6 +2,7 @@ import { useState, type FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useRecoverySession } from '@/hooks/useRecoverySession';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 type Stage = 'form' | 'success' | 'invalid';
 
@@ -67,7 +68,7 @@ export default function ResetPasswordPage() {
         <div
           className="absolute inset-0"
           style={{
-            backgroundImage: 'url(https://readdy.ai/api/search-image?query=luxury%20residential%20estate%20Kampala%20Uganda%20panoramic%20aerial%20view%20at%20golden%20hour%20modern%20villas%20green%20gardens%20warm%20amber%20tones%20refined%20architecture%20cinematic%20photography&width=480&height=960&seq=adminloginbg01&orientation=portrait)',
+            backgroundImage: `url(${PLACEHOLDER_HERO})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center top',
           }}

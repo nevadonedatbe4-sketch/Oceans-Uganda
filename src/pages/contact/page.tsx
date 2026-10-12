@@ -6,8 +6,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ContactSEO } from '@/components/feature/PageSEO';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
-const DEFAULT_CONTACT_HERO = 'https://readdy.ai/api/search-image?query=modern%20professional%20real%20estate%20office%20interior%20Kampala%20Uganda%20elegant%20reception%20desk%20wooden%20warm%20tones%20lush%20green%20plants%20premium%20corporate%20design%20high%20ceilings%20natural%20light%20luxury%20workspace&width=1920&height=650&seq=contact-hero1&orientation=landscape';
+const DEFAULT_CONTACT_HERO = PLACEHOLDER_HERO;
 
 export default function ContactPage() {
   const { get } = useSiteSettings();

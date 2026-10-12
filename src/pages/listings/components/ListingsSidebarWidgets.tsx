@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { supabase } from '@/lib/supabase';
 import { formatPrice } from '@/hooks/useListings';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 // ─── Widget wrapper ───────────────────────────────────────────────────────────
 function Widget({ title, extra, children }: { title: string; extra?: React.ReactNode; children: React.ReactNode }) {
@@ -41,7 +42,7 @@ function FeaturedPropertiesWidget() {
           >
             <div className="w-14 h-12 rounded-sm overflow-hidden shrink-0 bg-stone-100">
               <img
-                src={item.cover_image || 'https://readdy.ai/api/search-image?query=modern%20residential%20property%20exterior%20clean%20architecture%20neutral%20background&width=112&height=96&seq=fw1&orientation=squarish'}
+                src={item.cover_image || PLACEHOLDER_IMAGE}
                 alt={item.title}
                 className="w-full h-full object-cover object-top group-hover/item:scale-105 transition-transform duration-300"
               />

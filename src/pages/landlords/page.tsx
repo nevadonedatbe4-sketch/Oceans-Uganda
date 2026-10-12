@@ -8,9 +8,10 @@ import { LandlordsSEO } from '@/components/feature/PageSEO';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { PLACEHOLDER_HERO, PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
-const DEFAULT_HERO_IMAGE = 'https://readdy.ai/api/search-image?query=premium%20residential%20villa%20aerial%20view%20Kampala%20Uganda%20lush%20tropical%20garden%20manicured%20lawn%20luxury%20estate%20property%20investment%20high%20end%20colonial%20architecture%20warm%20morning%20sunlight%20cinematic%20high%20contrast%20photography%20vivid%20greenery&width=1920&height=750&seq=landlord-hero1&orientation=landscape';
-const DEFAULT_INTRO_IMAGE = 'https://readdy.ai/api/search-image?query=professional%20real%20estate%20agent%20showing%20luxury%20property%20interior%20modern%20living%20room%20Kampala%20Uganda%20elegant%20client%20consultation%20warm%20lighting%20premium%20interior%20design%20tropical%20greenery%20visible%20through%20windows&width=700&height=480&seq=landlord-intro1&orientation=landscape';
+const DEFAULT_HERO_IMAGE = PLACEHOLDER_HERO;
+const DEFAULT_INTRO_IMAGE = PLACEHOLDER_IMAGE;
 
 export default function LandlordsPage() {
   const { get } = useSiteSettings();

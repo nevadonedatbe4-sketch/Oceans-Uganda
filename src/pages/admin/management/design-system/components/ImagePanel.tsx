@@ -1,4 +1,5 @@
 import SettingField from '../../components/SettingField';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 interface Props {
   get: (key: string, fallback?: string) => string;
@@ -88,7 +89,7 @@ export default function ImagePanel({ get, update }: Props) {
           style={{ height: `${height}px`, borderRadius: `${radius}px` }}
         >
           <img
-            src="https://readdy.ai/api/search-image?query=modern%20luxury%20apartment%20exterior%20architecture%20Kampala%20Uganda%20tropical%20garden%20pool%20elegant%20minimal&width=800&height=500&seq=img-system-preview-1&orientation=landscape"
+            src={PLACEHOLDER_IMAGE}
             alt="preview"
             className="w-full h-full transition-transform duration-700"
             style={{ objectFit: fit as 'cover' | 'contain', objectPosition: get('img_focal_point', 'top') }}

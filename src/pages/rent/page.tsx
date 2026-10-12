@@ -16,6 +16,7 @@ import type { ListingFilters } from '@/pages/listings/components/ListingsFilterB
 import { RentSEO } from '@/components/feature/PageSEO';
 import OceansPropertySearchBar, { type SearchBarValue } from '@/components/feature/OceansPropertySearchBar';
 import { matchesAdvancedFilters, parsePriceRangeLabel } from '@/pages/listings/utils/advancedSearchFilters';
+import { PLACEHOLDER_IMAGE, PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 const PRICE_BRACKETS = [
   { label: 'Any Price', min: null, max: null },
@@ -42,7 +43,7 @@ const DEFAULT_FILTERS: ListingFilters = {
 const PER_PAGE_OPTIONS = [9, 18, 36];
 
 function mapListingToProperty(l: SupabaseListing): Property {
-  const fallback = 'https://readdy.ai/api/search-image?query=premium%20rental%20apartment%20Kampala%20Uganda%20furnished%20interior%20modern%20living%20room%20tropical%20garden%20elegant%20expat%20home%20bright%20airy%20spaces&width=600&height=400&seq=rent-placeholder&orientation=landscape';
+  const fallback = PLACEHOLDER_IMAGE;
   const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
   const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
@@ -428,7 +429,7 @@ export default function RentPage() {
         className="relative py-16 px-6 text-center overflow-hidden"
         style={{
           backgroundImage:
-            'url(https://readdy.ai/api/search-image?query=modern%20Kampala%20Uganda%20apartment%20building%20exterior%20tropical%20landscaping%20premium%20residential%20complex%20warm%20afternoon%20light%20real%20estate%20photography&width=1920&height=400&seq=rent-cta1&orientation=landscape)',
+            `url(${PLACEHOLDER_HERO})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

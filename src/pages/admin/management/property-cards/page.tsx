@@ -2,6 +2,7 @@ import { useManagementSettings } from '../hooks/useManagementSettings';
 import SettingField from '../components/SettingField';
 import SaveBar from '../components/SaveBar';
 import SectionHeader from '../components/SectionHeader';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 export default function PropertyCardsPage() {
   const { get, update, save, saving, dirty, saveStatus, reset, loading } =
@@ -225,7 +226,7 @@ export default function PropertyCardsPage() {
           {/* Image area */}
           <div className="relative w-full overflow-hidden" style={{ height: '160px' }}>
             <img
-              src="https://readdy.ai/api/search-image?query=modern%20luxury%20apartment%20interior%20living%20room%20elegant%20minimal%20design%20bright%20natural%20light&width=520&height=320&seq=card-mgmt-preview-1&orientation=landscape"
+              src={PLACEHOLDER_IMAGE}
               alt="preview"
               className="w-full h-full object-cover object-top"
             />

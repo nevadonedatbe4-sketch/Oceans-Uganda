@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import SettingField from '../../components/SettingField';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 interface Props {
   get: (key: string, fallback?: string) => string;
@@ -98,7 +99,7 @@ export default function CardBoxPanel({ get, update }: Props) {
         >
           <div className="w-full h-36 bg-stone-100 overflow-hidden">
             <img
-              src="https://readdy.ai/api/search-image?query=modern%20luxury%20apartment%20interior%20living%20room%20elegant%20minimal%20design%20bright%20natural%20light%20Kampala%20Uganda&width=480&height=288&seq=card-box-preview-1&orientation=landscape"
+              src={PLACEHOLDER_IMAGE}
               alt="preview"
               className="w-full h-full object-cover object-top"
             />

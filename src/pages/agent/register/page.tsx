@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 type Step = 1 | 2 | 3;
 
@@ -97,7 +98,7 @@ export default function AgentRegister() {
         className="hidden md:flex md:w-1/2 bg-cover bg-center relative"
         style={{
           backgroundImage:
-            'url(https://readdy.ai/api/search-image?query=professional%20real%20estate%20agent%20Kampala%20Uganda%20modern%20office%20luxury%20property%20interior%20warm%20natural%20light%20elegant%20workspace%20premium%20lifestyle&width=720&height=1080&seq=agentregbg01&orientation=portrait)',
+            `url(${PLACEHOLDER_HERO})`,
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-[#002349]/90 to-[#002349]/70" />

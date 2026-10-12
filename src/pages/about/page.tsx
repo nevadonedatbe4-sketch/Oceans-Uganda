@@ -7,6 +7,7 @@ import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { AboutSEO } from '@/components/feature/PageSEO';
+import { PLACEHOLDER_HERO, PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 interface Agent {
   id: string;
@@ -18,10 +19,10 @@ interface Agent {
 }
 
 // ─── Fallback images (used only when admin has NOT uploaded a replacement) ───
-const FALLBACK_HERO = 'https://readdy.ai/api/search-image?query=aerial%20panoramic%20view%20Kampala%20Uganda%20cityscape%20golden%20hour%20sunset%20luxury%20real%20estate%20skyline%20lush%20green%20hills%20contemporary%20buildings%20premium%20residential%20neighborhood%20warm%20tone%20cinematic%20photography%20professional&width=1920&height=800&seq=about-hero-2026&orientation=landscape';
-const FALLBACK_INTRO = 'https://readdy.ai/api/search-image?query=elegant%20professional%20real%20estate%20agents%20team%20Kampala%20Uganda%20luxury%20office%20interior%20modern%20boardroom%20warm%20wood%20tones%20high%20end%20property%20agency%20collaboration%20refined%20environment%20golden%20natural%20light&width=900&height=700&seq=about-intro-2026&orientation=portrait';
-const FALLBACK_STORY = 'https://readdy.ai/api/search-image?query=luxury%20villa%20exterior%20swimming%20pool%20Kampala%20Uganda%20lush%20tropical%20garden%20premium%20property%20modern%20architecture%20warm%20golden%20light%20blue%20sky%20palm%20trees%20high-end%20residential&width=900&height=700&seq=about-story-2026&orientation=landscape';
-const FALLBACK_CTA = 'https://readdy.ai/api/search-image?query=real%20estate%20agent%20handshake%20client%20keys%20modern%20apartment%20Kampala%20Uganda%20luxury%20living%20room%20sophisticated%20interior%20design%20trust%20professional%20service%20premium%20property&width=1200&height=600&seq=about-mission-2026&orientation=landscape';
+const FALLBACK_HERO = PLACEHOLDER_HERO;
+const FALLBACK_INTRO = PLACEHOLDER_IMAGE;
+const FALLBACK_STORY = PLACEHOLDER_IMAGE;
+const FALLBACK_CTA = PLACEHOLDER_HERO;
 
 export default function AboutPage() {
   const { get } = useSiteSettings();

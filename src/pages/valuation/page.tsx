@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import Navbar from '@/components/feature/Navbar';
 import Footer from '@/components/feature/Footer';
 import InnerContactSection from '@/components/feature/InnerContactSection';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 const PROPERTY_TYPES = ['Apartment', 'Villa', 'Penthouse', 'Townhouse', 'Family Home', 'Studio', 'Land', 'Commercial'];
 const BEDROOM_OPTIONS = ['1', '2', '3', '4', '5', '6+'];
@@ -63,7 +64,7 @@ export default function ValuationPage() {
       <div
         className="relative pt-36 pb-24 flex flex-col items-center justify-center text-center overflow-hidden"
         style={{
-          backgroundImage: 'url(https://readdy.ai/api/search-image?query=elegant%20luxury%20residential%20property%20Kampala%20Uganda%20aerial%20drone%20view%20tropical%20garden%20lush%20green%20premium%20estate%20colonial%20architecture%20warm%20golden%20hour%20photography%20cinematic%20real%20estate%20high%20contrast%20vivid%20colors&width=1920&height=700&seq=val-hero1&orientation=landscape)',
+          backgroundImage: `url(${PLACEHOLDER_HERO})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

@@ -14,6 +14,7 @@ import ListingsGrid from '@/pages/listings/components/ListingsGrid';
 import ListingsToolbar from '@/pages/listings/components/ListingsToolbar';
 import { SearchSEO } from '@/components/feature/PageSEO';
 import { matchesAdvancedFilters, parsePriceRangeLabel } from '@/pages/listings/utils/advancedSearchFilters';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 function mapListingToProperty(l: SupabaseListing): Property {
   const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
@@ -34,7 +35,7 @@ function mapListingToProperty(l: SupabaseListing): Property {
     badge: l.purpose === 'rent' ? 'To Let' : 'For Sale',
     image:
       l.cover_image ||
-      'https://readdy.ai/api/search-image?query=luxury%20residential%20property%20Kampala%20Uganda%20modern%20architecture%20premium%20real%20estate%20photography%20elegant%20interior%20natural%20light&width=600&height=400&seq=search-fallback&orientation=landscape',
+      PLACEHOLDER_IMAGE,
     listingDate: l.listing_date || l.created_at?.split('T')[0] || '',
     slug: l.slug,
     description: l.address || l.description || '',

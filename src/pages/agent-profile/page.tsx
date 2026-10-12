@@ -7,6 +7,7 @@ import GlobalContactStrip from '@/components/feature/GlobalContactStrip';
 import AgentListingCard from './components/AgentListingCard';
 import { AgentProfileSEO } from '@/components/feature/PageSEO';
 import LogoLoading from '@/components/base/LogoLoading';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 interface Agent {
   id: string;
@@ -39,7 +40,7 @@ interface Listing {
 }
 
 const HERO_IMG =
-  'https://readdy.ai/api/search-image?query=luxury%20residential%20mansion%20with%20manicured%20tropical%20garden%20swimming%20pool%20modern%20architecture%20Kampala%20Uganda%20warm%20golden%20afternoon%20light%20lush%20green%20landscape%20pristine%20clean%20editorial%20photography%20wide%20angle&width=1600&height=480&seq=agentprofilehero1&orientation=landscape';
+  PLACEHOLDER_HERO;
 
 export default function AgentPublicProfile() {
   const { id } = useParams<{ id: string }>();

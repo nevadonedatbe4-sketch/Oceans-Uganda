@@ -16,6 +16,7 @@ import Pagination from '@/components/base/Pagination';
 import type { ListingFilters } from '@/pages/listings/components/ListingsFilterBar';
 import { BuySEO } from '@/components/feature/PageSEO';
 import { matchesAdvancedFilters, parsePriceRangeLabel } from '@/pages/listings/utils/advancedSearchFilters';
+import { PLACEHOLDER_IMAGE, PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 const PRICE_BRACKETS = [
   { label: 'Any Price', min: null, max: null },
@@ -40,7 +41,7 @@ const DEFAULT_FILTERS: ListingFilters = {
 const PER_PAGE_OPTIONS = [9, 18, 36];
 
 function mapListingToProperty(l: SupabaseListing): Property {
-  const fallback = 'https://readdy.ai/api/search-image?query=luxury%20residential%20property%20Kampala%20Uganda%20modern%20interior%20elegant%20architecture%20premium%20real%20estate%20photography&width=600&height=400&seq=buy-placeholder&orientation=landscape';
+  const fallback = PLACEHOLDER_IMAGE;
   const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
   const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
@@ -419,7 +420,7 @@ export default function BuyPage() {
         className="relative py-16 px-6 text-center overflow-hidden"
         style={{
           backgroundImage:
-            'url(https://readdy.ai/api/search-image?query=elegant%20Kampala%20Uganda%20residential%20property%20exterior%20lush%20tropical%20garden%20colonial%20architecture%20warm%20golden%20hour%20light%20premium%20real%20estate%20photography&width=1920&height=400&seq=buy-cta1&orientation=landscape)',
+            `url(${PLACEHOLDER_HERO})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

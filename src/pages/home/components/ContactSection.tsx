@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 const ENQUIRY_TYPES = [
   { value: 'buy', label: 'Buying a Property' },
@@ -13,7 +14,7 @@ const ENQUIRY_TYPES = [
 ];
 
 const DEFAULT_SIDEBAR_IMG =
-  'https://readdy.ai/api/search-image?query=professional%20real%20estate%20agent%20smiling%20friendly%20Kampala%20Uganda%20portrait%20business%20attire%20modern%20office%20background%20confident%20warm%20approachable%20person&width=480&height=640&seq=home-contact-agent&orientation=portrait';
+  PLACEHOLDER_IMAGE;
 
 const GOLD = '#C9A84C';
 

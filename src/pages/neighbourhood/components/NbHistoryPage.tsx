@@ -6,6 +6,7 @@ import GlobalContactStrip from '@/components/feature/GlobalContactStrip';
 import LogoLoading from '@/components/base/LogoLoading';
 import { supabase } from '@/lib/supabase';
 import { NbHistorySEO } from '@/components/feature/PageSEO';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 function fromSlug(slug: string): string {
   return slug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -41,9 +42,6 @@ const HISTORY: Record<string, HistoryData> = {
     community: 'Kololo\'s community is international and professional. Diplomats, NGO directors, senior executives, and Uganda\'s business elite call it home. The social scene revolves around private clubs, embassy functions, and a handful of excellent restaurants.',
     notableFor: ['Kampala Golf Club', 'Foreign Embassies Row', 'Highest elevation in Kampala', 'Governor\'s Lodge (now State House Annex)', 'Kololo Airstrip (historic)'],
     gallery: [
-      { url: 'https://readdy.ai/api/search-image?query=Kololo%20Kampala%20Uganda%20colonial%20era%20tree%20lined%20avenue%20wide%20road%20lush%20tropical%20canopy%20elegant%20residential%20street%20warm%20golden%20afternoon%20light%20heritage%20architecture%20photography&width=800&height=500&seq=kololo_hist_1&orientation=landscape', caption: 'The iconic tree-lined avenues of Kololo' },
-      { url: 'https://readdy.ai/api/search-image?query=Kololo%20Kampala%20Uganda%20luxury%20villa%20colonial%20bungalow%20style%20white%20walls%20manicured%20tropical%20garden%20high%20perimeter%20wall%20elegant%20residential%20property%20photography&width=800&height=500&seq=kololo_hist_2&orientation=landscape', caption: 'Colonial-era architecture preserved in Kololo' },
-      { url: 'https://readdy.ai/api/search-image?query=Kampala%20Golf%20Club%20Uganda%20lush%20green%20fairway%20tropical%20trees%20rolling%20hills%20panoramic%20view%20golfers%20playing%20warm%20sunny%20day%20aerial%20photography&width=800&height=500&seq=kololo_hist_3&orientation=landscape', caption: 'Kampala Golf Club — a Kololo landmark since 1906' },
     ],
     funFact: 'Kololo Hill was used as a military observation post during World War I. Its elevation gave a clear line of sight across the entire Kampala basin.',
   },
@@ -62,9 +60,6 @@ const HISTORY: Record<string, HistoryData> = {
     community: 'Muyenga\'s community is one of Kampala\'s most international. Expats from across Europe, North America, and Asia live alongside Ugandan professionals and business owners. The Tank Hill area is particularly popular, with several well-regarded restaurants and a lively social scene.',
     notableFor: ['Tank Hill panoramic viewpoint', 'Lake Victoria views', 'Expat community hub', 'Muyenga Bar & Grill', 'Proximity to Ggaba Road dining strip'],
     gallery: [
-      { url: 'https://readdy.ai/api/search-image?query=Muyenga%20Kampala%20Uganda%20hilltop%20panoramic%20view%20Lake%20Victoria%20shimmering%20water%20lush%20green%20valley%20tropical%20trees%20golden%20dusk%20light%20scenic%20residential%20photography&width=800&height=500&seq=muyenga_hist_1&orientation=landscape', caption: 'Lake Victoria views from Tank Hill, Muyenga' },
-      { url: 'https://readdy.ai/api/search-image?query=Muyenga%20Kampala%20Uganda%20winding%20residential%20street%20bougainvillea%20walls%20tropical%20garden%20lush%20green%20expat%20neighbourhood%20warm%20afternoon%20light%20photography&width=800&height=500&seq=muyenga_hist_2&orientation=landscape', caption: 'The winding streets of Muyenga' },
-      { url: 'https://readdy.ai/api/search-image?query=Kampala%20Uganda%20expat%20neighbourhood%20outdoor%20restaurant%20terrace%20tropical%20garden%20warm%20evening%20light%20social%20dining%20scene%20lush%20greenery%20photography&width=800&height=500&seq=muyenga_hist_3&orientation=landscape', caption: 'Muyenga\'s thriving café and restaurant scene' },
     ],
     funFact: 'The "Tank Hill" area of Muyenga gets its name from the large water storage tanks that were installed there in the 1960s to supply the growing suburb. The tanks are long gone, but the name — and the views — remain.',
   },
@@ -83,9 +78,6 @@ const HISTORY: Record<string, HistoryData> = {
     community: 'Nakasero\'s community is professional and transient. Business executives, government officials, hotel guests, and diplomats pass through daily. The permanent residential community is smaller but affluent, drawn by the convenience of being at the centre of everything.',
     notableFor: ['Serena Hotel Kampala', 'Nakasero Market (est. 1920s)', 'Uganda Museum', 'Parliament of Uganda (nearby)', 'Kampala\'s first commercial district'],
     gallery: [
-      { url: 'https://readdy.ai/api/search-image?query=Nakasero%20Hill%20Kampala%20Uganda%20central%20business%20district%20modern%20office%20towers%20colonial%20buildings%20mixed%20skyline%20aerial%20view%20warm%20sunset%20amber%20glow%20urban%20panorama%20photography&width=800&height=500&seq=nakasero_hist_1&orientation=landscape', caption: 'Nakasero\'s layered skyline — old and new' },
-      { url: 'https://readdy.ai/api/search-image?query=Nakasero%20Market%20Kampala%20Uganda%20historic%20outdoor%20market%20vibrant%20colourful%20produce%20vendors%20busy%20urban%20scene%20tropical%20city%20photography&width=800&height=500&seq=nakasero_hist_2&orientation=landscape', caption: 'Nakasero Market — a Kampala institution since the 1920s' },
-      { url: 'https://readdy.ai/api/search-image?query=Serena%20Hotel%20Kampala%20Uganda%20luxury%20hotel%20exterior%20elegant%20architecture%20tropical%20gardens%20manicured%20grounds%20prestigious%20hospitality%20photography&width=800&height=500&seq=nakasero_hist_3&orientation=landscape', caption: 'The Serena Hotel — Nakasero\'s landmark address' },
     ],
     funFact: 'Nakasero Hill was the site of the first telegraph station in Uganda, established in 1901, connecting Kampala to Mombasa and the wider British Empire.',
   },
@@ -104,9 +96,6 @@ const HISTORY: Record<string, HistoryData> = {
     community: 'Young professionals, couples, and small families dominate Bugolobi\'s community. There\'s a strong expat presence, particularly from the NGO and tech sectors. The neighbourhood has a social, outward-looking character — people here tend to eat out, socialise, and engage with the city.',
     notableFor: ['Bugolobi Village Mall', 'Kampala\'s best restaurant strip', 'Modern apartment living', 'Proximity to Nakasero CBD', 'Young professional community'],
     gallery: [
-      { url: 'https://readdy.ai/api/search-image?query=Bugolobi%20Kampala%20Uganda%20modern%20apartment%20complex%20contemporary%20architecture%20wide%20clean%20street%20tropical%20trees%20residential%20neighbourhood%20bright%20daytime%20photography&width=800&height=500&seq=bugolobi_hist_1&orientation=landscape', caption: 'Modern apartment living in Bugolobi' },
-      { url: 'https://readdy.ai/api/search-image?query=Kampala%20Uganda%20urban%20restaurant%20outdoor%20terrace%20modern%20design%20young%20professionals%20dining%20tropical%20city%20neighbourhood%20evening%20warm%20light%20photography&width=800&height=500&seq=bugolobi_hist_2&orientation=landscape', caption: 'Bugolobi\'s thriving restaurant scene' },
-      { url: 'https://readdy.ai/api/search-image?query=Bugolobi%20Kampala%20Uganda%20walkable%20urban%20street%20wide%20pavement%20tropical%20trees%20modern%20buildings%20pedestrians%20daytime%20city%20life%20photography&width=800&height=500&seq=bugolobi_hist_3&orientation=landscape', caption: 'Bugolobi — one of Kampala\'s most walkable neighbourhoods' },
     ],
     funFact: 'Bugolobi was one of the first neighbourhoods in Kampala to have a dedicated jogging track — a reflection of its health-conscious, active community.',
   },
@@ -125,9 +114,6 @@ const HISTORY: Record<string, HistoryData> = {
     community: 'Naguru\'s community is predominantly Ugandan — professional families, academics, and established business people. There\'s a strong sense of neighbourhood identity, with long-standing residents who have lived here for decades.',
     notableFor: ['Panoramic views over Kampala', 'Naguru Hospital (major medical centre)', 'Large residential plots', 'Quiet, established community', 'Proximity to Ntinda commercial area'],
     gallery: [
-      { url: 'https://readdy.ai/api/search-image?query=Naguru%20Kampala%20Uganda%20hilltop%20panoramic%20view%20rolling%20green%20hills%20dense%20tropical%20vegetation%20luxury%20villas%20rooftops%20dramatic%20sky%20residential%20photography&width=800&height=500&seq=naguru_hist_1&orientation=landscape', caption: 'Naguru\'s famous panoramic views over Kampala' },
-      { url: 'https://readdy.ai/api/search-image?query=Naguru%20Kampala%20Uganda%20quiet%20residential%20street%20mature%20tropical%20trees%20wide%20road%20family%20homes%20established%20neighbourhood%20warm%20afternoon%20light%20photography&width=800&height=500&seq=naguru_hist_2&orientation=landscape', caption: 'The quiet, established streets of Naguru' },
-      { url: 'https://readdy.ai/api/search-image?query=Kampala%20Uganda%20colonial%20era%20bungalow%20residential%20home%20large%20garden%20mature%20trees%20established%20neighbourhood%20warm%20light%20heritage%20architecture%20photography&width=800&height=500&seq=naguru_hist_3&orientation=landscape', caption: 'Colonial-era homes preserved in Naguru' },
     ],
     funFact: 'Naguru was home to the first African-owned law firm in Uganda, established in the 1960s by one of the neighbourhood\'s early residents — a reflection of its professional, pioneering community.',
   },
@@ -146,9 +132,6 @@ const HISTORY: Record<string, HistoryData> = {
     community: 'Munyonyo\'s community is small, exclusive, and international. Senior diplomats, business leaders, and wealthy Ugandans choose Munyonyo for its privacy, its lake access, and its resort-like atmosphere.',
     notableFor: ['Munyonyo Commonwealth Resort', 'Stanley\'s 1875 landing site', 'Lake Victoria waterfront access', 'Exclusive gated estates', 'Historical significance to Ugandan Christianity'],
     gallery: [
-      { url: 'https://readdy.ai/api/search-image?query=Munyonyo%20Kampala%20Uganda%20lakeside%20luxury%20resort%20Lake%20Victoria%20shoreline%20lush%20green%20slopes%20premium%20homes%20tropical%20paradise%20aerial%20photography&width=800&height=500&seq=munyonyo_hist_1&orientation=landscape', caption: 'Munyonyo\'s lakeside setting on Lake Victoria' },
-      { url: 'https://readdy.ai/api/search-image?query=Munyonyo%20Commonwealth%20Resort%20Kampala%20Uganda%20luxury%20hotel%20exterior%20elegant%20architecture%20tropical%20gardens%20Lake%20Victoria%20view%20prestigious%20photography&width=800&height=500&seq=munyonyo_hist_2&orientation=landscape', caption: 'The Munyonyo Commonwealth Resort' },
-      { url: 'https://readdy.ai/api/search-image?query=Lake%20Victoria%20Uganda%20shoreline%20historic%20landing%20site%20lush%20tropical%20vegetation%20calm%20water%20reflections%20golden%20hour%20light%20scenic%20photography&width=800&height=500&seq=munyonyo_hist_3&orientation=landscape', caption: 'The historic Munyonyo shoreline where Stanley landed in 1875' },
     ],
     funFact: 'Henry Morton Stanley\'s 1875 letter to the Daily Telegraph, written after his visit to Munyonyo, prompted the Church Missionary Society to send missionaries to Uganda — directly leading to the Christianisation of the country.',
   },
@@ -168,8 +151,6 @@ const DEFAULT_HISTORY: HistoryData = {
   community: 'A diverse, established community of Ugandan families, professionals, and long-term residents who value the neighbourhood\'s stability and character.',
   notableFor: ['Established residential community', 'Good road access', 'Proximity to Kampala CBD', 'Growing property market'],
   gallery: [
-    { url: 'https://readdy.ai/api/search-image?query=Kampala%20Uganda%20established%20residential%20neighbourhood%20wide%20tree%20lined%20street%20family%20homes%20tropical%20garden%20lush%20green%20warm%20afternoon%20light%20photography&width=800&height=500&seq=default_hist_1&orientation=landscape', caption: 'Residential streets of Kampala' },
-    { url: 'https://readdy.ai/api/search-image?query=Kampala%20Uganda%20luxury%20residential%20neighbourhood%20aerial%20view%20lush%20tropical%20greenery%20premium%20gated%20community%20homes%20scenic%20wide%20roads%20sunny%20day%20photography&width=800&height=500&seq=default_hist_2&orientation=landscape', caption: 'Kampala\'s residential landscape' },
   ],
   funFact: 'Kampala is built on seven hills — a fact that gives each neighbourhood its own distinct character, views, and microclimate.',
 };
@@ -180,19 +161,19 @@ function getHistory(slug: string): HistoryData {
 }
 
 const FALLBACK_HERO: Record<string, string> = {
-  kololo: 'https://readdy.ai/api/search-image?query=Kololo%20Kampala%20Uganda%20dramatic%20aerial%20skyline%20panorama%20hilltop%20neighbourhood%20elevated%20city%20view%20dense%20tropical%20canopy%20luxury%20rooftops%20golden%20hour%20light%20sweeping%20urban%20landscape%20photography&width=1400&height=600&seq=kololo_hist_hero&orientation=landscape',
-  muyenga: 'https://readdy.ai/api/search-image?query=Muyenga%20Kampala%20Uganda%20scenic%20hilltop%20panorama%20Lake%20Victoria%20shimmering%20water%20visible%20background%20lush%20green%20valley%20luxury%20rooftops%20tropical%20trees%20golden%20dusk%20light%20dramatic%20wide%20angle%20photography&width=1400&height=600&seq=muyenga_hist_hero&orientation=landscape',
-  nakasero: 'https://readdy.ai/api/search-image?query=Nakasero%20Hill%20Kampala%20Uganda%20city%20skyline%20aerial%20view%20central%20business%20district%20modern%20office%20towers%20mixed%20high%20rise%20buildings%20dense%20urban%20core%20sunset%20warm%20amber%20glow%20panoramic%20cityscape%20photography&width=1400&height=600&seq=nakasero_hist_hero&orientation=landscape',
-  bugolobi: 'https://readdy.ai/api/search-image?query=Bugolobi%20Kampala%20Uganda%20modern%20urban%20skyline%20aerial%20view%20contemporary%20apartment%20blocks%20mixed%20residential%20commercial%20buildings%20wide%20organized%20streets%20tropical%20tree%20lined%20avenues%20bright%20daytime%20photography&width=1400&height=600&seq=bugolobi_hist_hero&orientation=landscape',
-  naguru: 'https://readdy.ai/api/search-image?query=Naguru%20Kampala%20Uganda%20hilltop%20panoramic%20skyline%20aerial%20sweeping%20view%20over%20Kampala%20city%20rolling%20green%20hills%20dense%20tropical%20vegetation%20luxury%20villas%20rooftops%20peaking%20through%20canopy%20dramatic%20sky%20photography&width=1400&height=600&seq=naguru_hist_hero&orientation=landscape',
-  munyonyo: 'https://readdy.ai/api/search-image?query=Munyonyo%20Kampala%20Uganda%20lakeside%20skyline%20aerial%20view%20Lake%20Victoria%20shoreline%20premium%20residential%20area%20lush%20green%20slopes%20luxury%20homes%20descending%20toward%20shimmering%20lake%20water%20dramatic%20aerial%20landscape%20photography&width=1400&height=600&seq=munyonyo_hist_hero&orientation=landscape',
+  kololo: PLACEHOLDER_HERO,
+  muyenga: PLACEHOLDER_HERO,
+  nakasero: PLACEHOLDER_HERO,
+  bugolobi: PLACEHOLDER_HERO,
+  naguru: PLACEHOLDER_HERO,
+  munyonyo: PLACEHOLDER_HERO,
 };
 
 function getFallbackHero(slug: string): string {
   const key = Object.keys(FALLBACK_HERO).find((k) => slug.toLowerCase().includes(k));
   return key
     ? FALLBACK_HERO[key]
-    : 'https://readdy.ai/api/search-image?query=Kampala%20Uganda%20luxury%20residential%20neighbourhood%20aerial%20view%20lush%20tropical%20greenery%20premium%20gated%20community%20homes%20scenic%20wide%20roads%20sunny%20day%20photography&width=1400&height=600&seq=nb-hist-hero-fallback&orientation=landscape';
+    : PLACEHOLDER_HERO;
 }
 
 interface DbNeighborhood {

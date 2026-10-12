@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import NeighbourhoodCard, { type NeighbourhoodCardData } from './components/NeighbourhoodCard';
 import { NeighbourhoodsSEO } from '@/components/feature/PageSEO';
 import { useSiteSettings } from '@/contexts/SiteSettingsContext';
+import { PLACEHOLDER_HERO } from '@/components/base/placeholders';
 
 interface BlogPost {
   id: string;
@@ -23,7 +24,7 @@ interface BlogPost {
 const NB_CATEGORIES = ['All Areas', 'For Sale', 'For Rent', 'Luxury', 'Family'];
 const BLOG_CATEGORIES = ['All', 'Neighborhood Spotlight', 'Market Insights', 'Buying Guide', 'Renting Guide', 'Investment', 'Tips & Advice'];
 
-const DEFAULT_HERO_IMAGE = 'https://readdy.ai/api/search-image?query=Kampala%20Uganda%20aerial%20panoramic%20cityscape%20dramatic%20golden%20hour%20light%20rolling%20green%20hills%20dense%20tropical%20canopy%20luxury%20rooftops%20emerging%20above%20trees%20sweeping%20urban%20landscape%20wide%20angle%20photography&width=1920&height=700&seq=nb_index_hero&orientation=landscape';
+const DEFAULT_HERO_IMAGE = PLACEHOLDER_HERO;
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });

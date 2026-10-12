@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 interface Props {
   get: (key: string, fallback?: string) => string;
@@ -188,7 +189,7 @@ export default function CardContentPanel({ get, update }: Props) {
         <div className="max-w-[220px] border border-stone-100 rounded-lg overflow-hidden">
           <div className="w-full h-28 bg-stone-100">
             <img
-              src="https://readdy.ai/api/search-image?query=modern%20luxury%20apartment%20interior%20living%20room%20elegant%20minimal%20design%20bright%20natural%20light%20Kampala&width=440&height=224&seq=card-content-preview-1&orientation=landscape"
+              src={PLACEHOLDER_IMAGE}
               alt="preview"
               className="w-full h-full object-cover object-top"
             />

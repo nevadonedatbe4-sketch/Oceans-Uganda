@@ -13,12 +13,13 @@ import { useAllListings, useNeighborhoods, type SupabaseListing } from '@/hooks/
 import type { Property } from '@/types/property';
 import { AllPropertiesSEO } from '@/components/feature/PageSEO';
 import { matchesAdvancedFilters, parsePriceRangeLabel } from '@/pages/listings/utils/advancedSearchFilters';
+import { PLACEHOLDER_IMAGE } from '@/components/base/placeholders';
 
 const PAGE_SIZE = 12;
 
 function mapListingToProperty(l: SupabaseListing): Property {
   const fallback =
-    'https://readdy.ai/api/search-image?query=premium%20property%20Kampala%20Uganda%20modern%20interior%20elegant%20architecture%20real%20estate%20photography&width=600&height=400&seq=allprop-fallback&orientation=landscape';
+    PLACEHOLDER_IMAGE;
   const addressParts = [l.address, l.neighborhood_name, l.city].filter(Boolean);
   const fullLocation = addressParts.length > 0 ? addressParts.join(', ') : (l.location || 'Kampala');
   return {
