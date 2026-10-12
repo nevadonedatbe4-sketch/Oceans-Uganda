@@ -15,7 +15,7 @@ const navLinks = [
   { label: 'Contact', href: '/contact' },
 ];
 
-const FALLBACK_LOGO = 'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/ee86f326-2c48-4946-a85a-0b6bae37f11d_logo-21.png?v=6d142c0fdbabe750634bc9bfe54c6d82';
+const FALLBACK_LOGO = 'https://iisgbnbwbmxrdvhmolee.supabase.co/storage/v1/object/public/property-images/logos/main-logo_1784019185390.png';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
