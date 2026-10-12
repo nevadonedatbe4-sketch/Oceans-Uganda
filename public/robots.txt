@@ -30,4 +30,4 @@ Allow: /blog
 Allow: /blog/
 Allow: /agents/
 
-Sitemap: https://example.com/sitemap.xml
+Sitemap: https://oceans.co.ug/sitemap.xml
