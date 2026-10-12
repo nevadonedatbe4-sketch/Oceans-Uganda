@@ -21,8 +21,7 @@ const SOCIAL_ICONS: { key: string; icon: string; label: string; fallback: string
   { key: 'whatsapp_direct_url', icon: 'ri-whatsapp-fill', label: 'WhatsApp', fallback: 'https://wa.link/ksz8s8', color: 'bg-[#25D366]' },
 ];
 
-const FALLBACK_LOGO = 'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/ee86f326-2c48-4946-a85a-0b6bae37f11d_logo-21.png?v=6d142c0fdbabe750634bc9bfe54c6d82';
-const FALLBACK_LOGO_WHITE = 'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/ef96fe92-ea39-4b3e-b1f3-ece8517d985a_logo-edit2.png?v=766c126943cc2a2a521d7ed560d9a2c1';
+const FOOTER_LOGO = 'https://iisgbnbwbmxrdvhmolee.supabase.co/storage/v1/object/public/property-images/logos/main-logo_1784019185390.png';
 
 export default function Footer() {
   const { get } = useSiteSettings();
@@ -32,8 +31,6 @@ export default function Footer() {
   const email = get('email', 'info@oceans.co.ug');
   const address = get('footer_address') || get('office_address', '785 Luthuli Avenue, Bugolobi, Kampala, Uganda');
   const footerText = get('footer_text', `© ${new Date().getFullYear()} Oceans Uganda. All rights reserved.`);
-  const logoSrc = get('logo_main') || FALLBACK_LOGO;
-  const logoWhiteSrc = get('logo_white') || FALLBACK_LOGO_WHITE;
   const showSocialInFooter = get('social_show_footer', 'true') === 'true';
 
   const activeSocials = SOCIAL_ICONS.filter((s) => !!(get(s.key) || s.fallback));
@@ -146,7 +143,7 @@ export default function Footer() {
       <div className="border-t border-white/10 py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col items-center gap-4">
           <img
-            src={logoWhiteSrc}
+            src={FOOTER_LOGO}
             alt={companyName}
             className="h-16 w-auto object-contain opacity-90"
           />

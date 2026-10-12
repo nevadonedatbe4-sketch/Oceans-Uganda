@@ -7,9 +7,6 @@ import SocialIcons from '@/components/feature/SocialIcons';
 const DEFAULT_BG =
   'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/c87bb61c-c786-4ffd-86e9-7a2f02b6db8a_kla-oceans.jpg?v=986cb4b80dda40b17ef86d6852562384';
 
-const DEFAULT_LOGO =
-  'https://storage.readdy-site.link/project_files/9cd5c10a-ac7d-4fbc-869b-558e145ed2c7/5709557c-85a5-4bd5-827b-de0e149ee94b_logo-main-smal-1.png?v=baab6056156e05218f44fc6ee7472eef';
-
 function getBtnClasses(style: string): string {
   switch (style) {
     case 'solid-white':
@@ -56,7 +53,6 @@ export default function HeroSection() {
   // Visibility
   const visible = get('hero_visible', 'true') === 'true';
   const showSearch = get('hero_show_search', 'false') === 'true';
-  const showLogo = get('hero_show_logo', 'true') === 'true';
   const showSocials = get('hero_show_socials', 'true') === 'true';
 
   // Background
@@ -124,8 +120,6 @@ export default function HeroSection() {
   const btnLetterSpacing = parseFloat(get('hero_btn_letter_spacing', '6.3'));
   const btnTextTransform = get('hero_btn_text_transform', 'uppercase') as React.CSSProperties['textTransform'];
 
-  // Logo
-  const logoSrc = get('logo_main', '') || DEFAULT_LOGO;
 
   const alignClass =
     alignment === 'left'
@@ -216,14 +210,6 @@ export default function HeroSection() {
         className={`hero-section-inner relative z-10 w-full max-w-2xl md:max-w-5xl lg:max-w-6xl mx-auto flex flex-col ${alignClass} px-6 items-center justify-center`}
         style={{ paddingTop: `${paddingY}px`, paddingBottom: `${paddingY}px` }}
       >
-        {/* Logo */}
-        {showLogo && (
-          <img
-            src={logoSrc}
-            alt="Logo"
-            className="mx-auto mb-4 sm:mb-6 max-w-[280px] sm:max-w-[320px] md:max-w-[400px] w-full h-auto brightness-0 invert"
-          />
-        )}
 
         {/* Title */}
         {title && (
